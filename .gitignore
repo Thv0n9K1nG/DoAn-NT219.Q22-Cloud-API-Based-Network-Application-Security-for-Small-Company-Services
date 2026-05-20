@@ -149,6 +149,8 @@ activemq-data/
 
 # Environments
 .env
+.env.*
+!.env.example
 .envrc
 .venv
 env/
@@ -216,3 +218,30 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project-local working context
+.context/
+
+# Certificates and private keys
+*.key
+*.crt
+*.pem
+*.p12
+*.pfx
+gateway/certs/*
+!gateway/certs/.gitkeep
+
+# Generated reports and runtime artifacts
+tests/reports/*
+!tests/reports/.gitkeep
+.vault-token
+logs/
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local Compose overrides
+docker-compose.override.yml
