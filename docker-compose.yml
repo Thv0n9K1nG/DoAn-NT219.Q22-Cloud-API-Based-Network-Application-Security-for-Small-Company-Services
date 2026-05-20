@@ -1,0 +1,17 @@
+name: nt219-cloud-api-security
+
+services: {}
+
+networks:
+  dmz-net:
+    driver: bridge
+  app-net:
+    driver: bridge
+  data-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  vault-data:
+  loki-data:
+  grafana-data:
