@@ -103,13 +103,31 @@ demo/                     Demo script and synthetic data
 
 ## Local Development
 
-Stage 1 is a repository skeleton only. The full stack is intentionally not
-expected to run yet.
+Stage 2 provides the base infrastructure containers. Application services,
+gateway routes, policies, and schemas are still implemented in later stages.
 
-Expected local workflow for later stages:
+Create a local environment file:
 
 ```bash
 cp .env.example .env
+```
+
+Start the base infrastructure:
+
+```bash
+docker compose up -d postgres redis vault loki grafana
+```
+
+Optional services:
+
+```bash
+docker compose up -d keycloak
+docker compose --profile observability up -d promtail
+```
+
+Expected full-stack workflow for later stages:
+
+```bash
 docker compose up -d
 ```
 
@@ -117,11 +135,10 @@ Use `docker-compose.dev.yml` for service hot reload overrides in later stages.
 
 ## Current Stage
 
-Completed: Stage 1 - project scope, preliminary threat model, and repository
-skeleton.
+Completed: Stage 2 - Docker Compose base, network segmentation, infrastructure
+health checks, and observability provisioning placeholders.
 
-Next: Stage 2 - Docker Compose base, network segmentation, and infrastructure
-health checks.
+Next: Stage 3 - database schema, seed data, and PostgreSQL row-level security.
 
 ## Safety Notes
 
