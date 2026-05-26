@@ -56,3 +56,18 @@ PostgreSQL, Redis, Vault, Loki, and Keycloak stay on internal Docker networks.
 | PostgreSQL | Data isolation with row-level security |
 | Vault | Secret and key management |
 | Loki/Grafana | Detection, dashboards, and alerting |
+
+## Stage 3 Data Model
+
+SQL scripts in `scripts/` are the migration source for this stage. The prototype
+schema contains:
+
+| Table | Purpose | Tenant-owned |
+| --- | --- | --- |
+| `tenants` | Tenant registry for alpha and beta lab tenants | No |
+| `users` | Application profile mapped to Keycloak users | Yes |
+| `resources` | Tenant-owned resource records used for BOLA/RLS tests | Yes |
+| `payments` | Stripe sandbox payment records | Yes |
+
+`resources` has PostgreSQL RLS enabled and forced. API code must set
+`app.current_tenant` from a verified JWT before querying tenant-owned resources.

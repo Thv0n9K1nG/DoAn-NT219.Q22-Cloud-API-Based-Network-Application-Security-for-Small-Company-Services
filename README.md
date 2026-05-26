@@ -118,6 +118,15 @@ Start the base infrastructure:
 docker compose up -d postgres redis vault loki grafana
 ```
 
+Apply the Stage 3 database schema and RLS demo data:
+
+```bash
+docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d resourcedb < scripts/db-init.sql
+docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d resourcedb < scripts/apply-rls.sql
+docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d resourcedb < scripts/seed-data.sql
+docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d resourcedb < scripts/test-rls.sql
+```
+
 Optional services:
 
 ```bash
@@ -135,10 +144,10 @@ Use `docker-compose.dev.yml` for service hot reload overrides in later stages.
 
 ## Current Stage
 
-Completed: Stage 2 - Docker Compose base, network segmentation, infrastructure
-health checks, and observability provisioning placeholders.
+Completed: Stage 3 - SQL-script database schema, deterministic seed data, and
+PostgreSQL row-level security proof for tenant-owned resources.
 
-Next: Stage 3 - database schema, seed data, and PostgreSQL row-level security.
+Next: Stage 4 - Keycloak realm, clients, roles, users, and JWT tenant claims.
 
 ## Safety Notes
 
