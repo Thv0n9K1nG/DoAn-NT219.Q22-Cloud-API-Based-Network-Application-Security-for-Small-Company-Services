@@ -17,12 +17,13 @@ Client
 
 | Network | Exposure | Current Stage 2 Members |
 | --- | --- | --- |
-| `dmz-net` | Host-facing bridge | `grafana` |
+| `dmz-net` | Host-facing bridge | `grafana`, `keycloak` |
 | `app-net` | Internal bridge | `redis`, `vault`, `keycloak` |
 | `data-net` | Internal bridge | `postgres`, `redis`, `keycloak`, `loki`, `grafana`, optional `promtail` |
 
-Only Grafana is exposed to the host in Stage 2 through `localhost:3000`.
-PostgreSQL, Redis, Vault, Loki, and Keycloak stay on internal Docker networks.
+Grafana is exposed through `localhost:3000`. Starting in Stage 4, Keycloak is
+also exposed through `localhost:18080` for lab token and JWKS checks only.
+PostgreSQL, Redis, Vault, and Loki stay on internal Docker networks.
 
 ## Base Infrastructure
 
@@ -31,7 +32,7 @@ PostgreSQL, Redis, Vault, Loki, and Keycloak stay on internal Docker networks.
 | `postgres` | `postgres:16-alpine` | Shared PostgreSQL server with stage databases | None |
 | `redis` | `redis:7-alpine` | Rate limit state for Kong in later stages | None |
 | `vault` | `hashicorp/vault:1.16` | Lab-only Vault dev server | None |
-| `keycloak` | `quay.io/keycloak/keycloak:24.0` | OIDC provider foundation | None |
+| `keycloak` | `quay.io/keycloak/keycloak:24.0` | OIDC provider foundation | `18080` |
 | `loki` | `grafana/loki:3.0.0` | Log backend | None |
 | `grafana` | `grafana/grafana:10.4.0` | Dashboards and Loki UI | `3000` |
 | `promtail` | `grafana/promtail:3.0.0` | Optional log shipper profile | None |

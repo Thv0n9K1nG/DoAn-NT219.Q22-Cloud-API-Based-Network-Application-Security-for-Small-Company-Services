@@ -131,7 +131,15 @@ Optional services:
 
 ```bash
 docker compose up -d keycloak
+bash scripts/keycloak-init.sh
 docker compose --profile observability up -d promtail
+```
+
+Get a lab access token from Keycloak:
+
+```bash
+bash scripts/get-token.sh alpha-user@example.com 'TestPass123!'
+python scripts/test-keycloak-claims.py
 ```
 
 Expected full-stack workflow for later stages:
@@ -144,10 +152,11 @@ Use `docker-compose.dev.yml` for service hot reload overrides in later stages.
 
 ## Current Stage
 
-Completed: Stage 3 - SQL-script database schema, deterministic seed data, and
-PostgreSQL row-level security proof for tenant-owned resources.
+Completed: Stage 4 - Keycloak realm, lab users, clients, realm roles, tenant
+claims, and token helper script.
 
-Next: Stage 4 - Keycloak realm, clients, roles, users, and JWT tenant claims.
+Next: Stage 5 - shared JWT verification, request context, and structured logging
+library for FastAPI services.
 
 ## Safety Notes
 
