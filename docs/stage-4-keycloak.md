@@ -4,10 +4,10 @@ Stage 4 configures Keycloak as the OIDC identity provider for the SaaS lab.
 The project uses one realm, `saas-platform`, and simulates tenant organizations
 with user attributes:
 
-| Tenant | `tenant_id` | `org_name` |
-| --- | --- | --- |
-| Alpha | `11111111-1111-1111-1111-111111111111` | `tenant-alpha` |
-| Beta | `22222222-2222-2222-2222-222222222222` | `tenant-beta` |
+| Tenant | `tenant_id`                            | `org_name`     |
+| ------ | -------------------------------------- | -------------- |
+| Alpha  | `11111111-1111-1111-1111-111111111111` | `tenant-alpha` |
+| Beta   | `22222222-2222-2222-2222-222222222222` | `tenant-beta`  |
 
 ## Runtime
 

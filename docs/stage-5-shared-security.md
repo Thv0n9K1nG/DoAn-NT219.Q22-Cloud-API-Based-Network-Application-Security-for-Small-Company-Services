@@ -5,13 +5,13 @@ JWT verification, request context, structured logging, and error responses.
 
 ## Modules
 
-| Module | Purpose |
-| --- | --- |
-| `shared/config.py` | Pydantic settings for Keycloak, JWT, Vault, database, and headers |
+| Module                          | Purpose                                                                        |
+| ------------------------------- | ------------------------------------------------------------------------------ |
+| `shared/config.py`              | Pydantic settings for Keycloak, JWT, Vault, database, and headers              |
 | `shared/security_middleware.py` | RS256 JWT verification, JWKS cache, current user extraction, role dependencies |
-| `shared/request_context.py` | `contextvars` for request ID, tenant ID, and user ID |
-| `shared/logging_config.py` | JSON logging with request context and secret redaction |
-| `shared/errors.py` | Standard API error payloads and FastAPI exception handler registration |
+| `shared/request_context.py`     | `contextvars` for request ID, tenant ID, and user ID                           |
+| `shared/logging_config.py`      | JSON logging with request context and secret redaction                         |
+| `shared/errors.py`              | Standard API error payloads and FastAPI exception handler registration         |
 
 ## Keycloak URLs
 
