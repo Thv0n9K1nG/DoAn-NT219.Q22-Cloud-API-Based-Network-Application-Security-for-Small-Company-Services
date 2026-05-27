@@ -142,6 +142,13 @@ bash scripts/get-token.sh alpha-user@example.com 'TestPass123!'
 python scripts/test-keycloak-claims.py
 ```
 
+Run the Stage 5 shared security tests:
+
+```bash
+python -m pip install -r requirements-dev.txt
+pytest services/resource-service/tests -v
+```
+
 Expected full-stack workflow for later stages:
 
 ```bash
@@ -152,11 +159,10 @@ Use `docker-compose.dev.yml` for service hot reload overrides in later stages.
 
 ## Current Stage
 
-Completed: Stage 4 - Keycloak realm, lab users, clients, realm roles, tenant
-claims, and token helper script.
+Completed: Stage 5 - shared settings, JWT verification, role dependencies,
+request context, structured logging, and standard API errors.
 
-Next: Stage 5 - shared JWT verification, request context, and structured logging
-library for FastAPI services.
+Next: Stage 6 - Vault KV, Transit, AppRole, PKI, and shared Vault client wrapper.
 
 ## Safety Notes
 
