@@ -149,6 +149,14 @@ python -m pip install -r requirements-dev.txt
 pytest services/resource-service/tests -v
 ```
 
+Initialize Vault and run the Stage 6 wrapper tests:
+
+```bash
+docker compose up -d vault
+bash scripts/vault-init.sh
+pytest tests/test_vault_client.py -v
+```
+
 Expected full-stack workflow for later stages:
 
 ```bash
@@ -159,10 +167,11 @@ Use `docker-compose.dev.yml` for service hot reload overrides in later stages.
 
 ## Current Stage
 
-Completed: Stage 5 - shared settings, JWT verification, role dependencies,
-request context, structured logging, and standard API errors.
+Completed: Stage 6 - Vault KV, Transit, AppRole, PKI bootstrap, policies, and
+shared Vault client wrapper.
 
-Next: Stage 6 - Vault KV, Transit, AppRole, PKI, and shared Vault client wrapper.
+Next: Stage 7 - FastAPI microservice app skeletons, health checks, DB session,
+OpenAPI, Dockerfiles, and service tests.
 
 ## Safety Notes
 
