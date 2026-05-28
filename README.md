@@ -52,19 +52,19 @@ Main actors:
 
 ## Technology Stack
 
-| Layer | Technology | Role |
-| --- | --- | --- |
-| API Gateway | Kong OSS | TLS termination, JWT validation, rate limit, routing |
-| Identity Provider | Keycloak | OAuth2/OIDC, organizations, JWT issuance |
-| Authorization | OPA | RBAC/ABAC policy decision point |
-| Secrets | HashiCorp Vault | Secrets, transit keys, PKI material |
-| Services | Python FastAPI | User, resource, admin, and payment APIs |
-| Database | PostgreSQL | Tenant data and row-level security |
-| Cache/State | Redis | Gateway rate limiting state |
-| Observability | Grafana, Loki, Promtail | Logs, dashboards, alerts |
-| PQC | liboqs / oqs-python | ML-DSA application-layer signatures |
-| CI/CD | GitHub Actions | SAST, dependency scan, tests, builds |
-| Deployment | Docker Compose | Local lab runtime |
+| Layer             | Technology              | Role                                                 |
+| ----------------- | ----------------------- | ---------------------------------------------------- |
+| API Gateway       | Kong OSS                | TLS termination, JWT validation, rate limit, routing |
+| Identity Provider | Keycloak                | OAuth2/OIDC, organizations, JWT issuance             |
+| Authorization     | OPA                     | RBAC/ABAC policy decision point                      |
+| Secrets           | HashiCorp Vault         | Secrets, transit keys, PKI material                  |
+| Services          | Python FastAPI          | User, resource, admin, and payment APIs              |
+| Database          | PostgreSQL              | Tenant data and row-level security                   |
+| Cache/State       | Redis                   | Gateway rate limiting state                          |
+| Observability     | Grafana, Loki, Promtail | Logs, dashboards, alerts                             |
+| PQC               | liboqs / oqs-python     | ML-DSA application-layer signatures                  |
+| CI/CD             | GitHub Actions          | SAST, dependency scan, tests, builds                 |
+| Deployment        | Docker Compose          | Local lab runtime                                    |
 
 ## Request Flow
 
@@ -157,13 +157,37 @@ bash scripts/vault-init.sh
 pytest tests/test_vault_client.py -v
 ```
 
-Build and test the Stage 7 microservice skeletons:
+Build and test the Stage 7 microservice skeletons and Stage 8 business APIs:
 
 ```bash
 pytest services/user-service/tests services/resource-service/tests services/admin-service/tests services/payment-service/tests -v
 docker compose build user-service resource-service admin-service payment-service
 docker compose up -d postgres vault keycloak user-service resource-service admin-service payment-service
 ```
+
+Apply the service schemas used by Stage 8 CRUD endpoints:
+
+```powershell
+cmd /c "type scripts\db-init.sql | docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d userdb"
+cmd /c "type scripts\seed-data.sql | docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d userdb"
+cmd /c "type scripts\db-init.sql | docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d resourcedb"
+cmd /c "type scripts\apply-rls.sql | docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d resourcedb"
+cmd /c "type scripts\seed-data.sql | docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d resourcedb"
+cmd /c "type scripts\db-init.sql | docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d admindb"
+cmd /c "type scripts\seed-data.sql | docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d admindb"
+```
+
+Run a Stage 8 BOLA demo with `curl`. Microservice ports are internal before the
+Kong stage, so this uses a temporary curl container on Compose `app-net`:
+
+```powershell
+
+
+docker compose logs --tail=80 resource-service | Select-String "security.bola_attempt|$RESOURCE_ID"
+```
+
+Expected result: beta receives `403 ACCESS_DENIED`, and Resource Service logs a
+`security.bola_attempt` event with attacker tenant and resource tenant IDs.
 
 Expected full-stack workflow for later stages:
 
@@ -175,11 +199,11 @@ Use `docker-compose.dev.yml` for service hot reload overrides in later stages.
 
 ## Current Stage
 
-Completed: Stage 7 - FastAPI microservice skeletons, async DB sessions,
-Dockerfiles, Compose services, health endpoints, and OpenAPI tests.
+Completed: Stage 8 - User, Resource, and Admin business endpoints with
+tenant-aware role checks, service-level BOLA protection, structured security
+logging, and focused route tests.
 
-Next: Stage 8 - User, Resource, and Admin business logic with tenant isolation
-and BOLA checks.
+Next: Stage 9 - OPA authorization policy and policy unit tests.
 
 ## Safety Notes
 
