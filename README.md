@@ -157,6 +157,14 @@ bash scripts/vault-init.sh
 pytest tests/test_vault_client.py -v
 ```
 
+Build and test the Stage 7 microservice skeletons:
+
+```bash
+pytest services/user-service/tests services/resource-service/tests services/admin-service/tests services/payment-service/tests -v
+docker compose build user-service resource-service admin-service payment-service
+docker compose up -d postgres vault keycloak user-service resource-service admin-service payment-service
+```
+
 Expected full-stack workflow for later stages:
 
 ```bash
@@ -167,11 +175,11 @@ Use `docker-compose.dev.yml` for service hot reload overrides in later stages.
 
 ## Current Stage
 
-Completed: Stage 6 - Vault KV, Transit, AppRole, PKI bootstrap, policies, and
-shared Vault client wrapper.
+Completed: Stage 7 - FastAPI microservice skeletons, async DB sessions,
+Dockerfiles, Compose services, health endpoints, and OpenAPI tests.
 
-Next: Stage 7 - FastAPI microservice app skeletons, health checks, DB session,
-OpenAPI, Dockerfiles, and service tests.
+Next: Stage 8 - User, Resource, and Admin business logic with tenant isolation
+and BOLA checks.
 
 ## Safety Notes
 
