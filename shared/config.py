@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     oidc_issuer: str | None = Field(default=None, alias="OIDC_ISSUER")
 
     vault_addr: str = Field(default="http://vault:8200", alias="VAULT_ADDR")
+    vault_role_id: str | None = Field(default=None, alias="VAULT_ROLE_ID")
+    vault_secret_id: str | None = Field(default=None, alias="VAULT_SECRET_ID")
+    vault_pki_role: str = Field(default="internal-services", alias="VAULT_PKI_ROLE")
     database_url: str | None = Field(default=None, alias="DATABASE_URL")
 
     request_id_header: str = Field(default="X-Request-ID", alias="REQUEST_ID_HEADER")
