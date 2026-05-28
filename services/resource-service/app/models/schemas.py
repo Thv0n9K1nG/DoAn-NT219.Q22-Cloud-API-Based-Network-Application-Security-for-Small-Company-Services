@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 
 class ServiceInfo(BaseModel):
@@ -25,6 +25,8 @@ class ResourceUpdate(BaseModel):
 
 
 class ResourceResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     tenant_id: UUID
     owner_user_id: str
@@ -32,4 +34,3 @@ class ResourceResponse(BaseModel):
     data: dict
     url: str | None = None
     created_at: datetime
-
