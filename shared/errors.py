@@ -12,6 +12,9 @@ class ErrorCode:
     AUTH_REQUIRED = "AUTH_REQUIRED"
     INVALID_TOKEN = "INVALID_TOKEN"
     ACCESS_DENIED = "ACCESS_DENIED"
+    BAD_REQUEST = "BAD_REQUEST"
+    NOT_FOUND = "NOT_FOUND"
+    CONFLICT = "CONFLICT"
     INTERNAL_ERROR = "INTERNAL_ERROR"
 
 
@@ -40,4 +43,3 @@ def register_error_handlers(app: FastAPI) -> None:
             status_code=exc.status_code,
             content=error_payload(exc.code, exc.message),
         )
-
