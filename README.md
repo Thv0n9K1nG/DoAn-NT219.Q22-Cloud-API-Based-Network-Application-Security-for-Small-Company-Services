@@ -181,7 +181,50 @@ Run a Stage 8 BOLA demo with `curl`. Microservice ports are internal before the
 Kong stage, so this uses a temporary curl container on Compose `app-net`:
 
 ```powershell
+$ALPHA_TOKEN = bash scripts/get-token.sh alpha-user@example.com 'TestPass123!'
+$BETA_TOKEN = bash scripts/get-token.sh beta-user@example.com 'TestPass123!'
 
+$UNIQUE_NAME = "stage8-bola-demo-$([guid]::NewGuid().ToString('N'))"
+
+$BODY = @{
+  name = $UNIQUE_NAME
+  data = @{
+    classification = "confidential"
+    demo = "bola"
+  }
+} | ConvertTo-Json -Compress
+
+Write-Host "Request body:"
+Write-Host $BODY
+
+$CREATE_RESPONSE = $BODY | docker run --rm -i `
+  --network nt219-cloud-api-security_app-net `
+  curlimages/curl:8.10.1 -sS `
+  -X POST "http://resource-service:8000/api/v1/resources" `
+  -H "Authorization: Bearer $ALPHA_TOKEN" `
+  -H "Content-Type: application/json" `
+  --data-binary '@-'
+
+Write-Host "`nCreate response:"
+Write-Host $CREATE_RESPONSE
+
+$CREATE_JSON = $CREATE_RESPONSE | ConvertFrom-Json
+$RESOURCE_ID = $CREATE_JSON.id
+
+if ([string]::IsNullOrWhiteSpace($RESOURCE_ID)) {
+  Write-Host "`nERROR: Resource was not created. Stop here."
+  exit 1
+}
+
+Write-Host "`nResource ID:"
+Write-Host $RESOURCE_ID
+
+Write-Host "`nBeta user tries to read Alpha resource:"
+docker run --rm `
+  --network nt219-cloud-api-security_app-net `
+  curlimages/curl:8.10.1 -i `
+  "http://resource-service:8000/api/v1/resources/$RESOURCE_ID" `
+  -H "Authorization: Bearer $BETA_TOKEN"
 
 docker compose logs --tail=80 resource-service | Select-String "security.bola_attempt|$RESOURCE_ID"
 ```
