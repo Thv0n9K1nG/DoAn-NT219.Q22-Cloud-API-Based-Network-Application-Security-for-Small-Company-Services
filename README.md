@@ -62,7 +62,7 @@ Main actors:
 | Database          | PostgreSQL              | Tenant data and row-level security                   |
 | Cache/State       | Redis                   | Gateway rate limiting state                          |
 | Observability     | Grafana, Loki, Promtail | Logs, dashboards, alerts                             |
-| PQC               | liboqs / oqs-python     | ML-DSA application-layer signatures                  |
+| PQC               | pqcrypto ML-DSA-65      | ML-DSA application-layer signatures                  |
 | CI/CD             | GitHub Actions          | SAST, dependency scan, tests, builds                 |
 | Deployment        | Docker Compose          | Local lab runtime                                    |
 
@@ -304,6 +304,59 @@ Kong routes to HTTPS upstream              expected=200 actual=200
 Stage 11 TLS plane test passed.
 ```
 
+Generate real ML-DSA-65 keys in Vault and run the Stage 12 PQC tests:
+
+```bash
+docker compose up -d vault
+bash scripts/vault-init.sh
+python scripts/generate_mldsa_keys.py --vault-addr http://localhost:8200 --vault-token root-token-for-lab-only
+pytest tests/test_pqc_signing.py tests/test_s2s_token.py tests/test_webhook_signer.py -v
+python tests/benchmarks/benchmark_mldsa.py --iterations 20
+```
+
+Expected output includes:
+
+```text
+stored secret/pqc/s2s-signing algorithm=ML-DSA-65 public_key_bytes=1952 private_key_bytes=4032 signature_bytes=3309
+stored secret/pqc/webhook-signing algorithm=ML-DSA-65 public_key_bytes=1952 private_key_bytes=4032 signature_bytes=3309
+13 passed
+ML-DSA-65 benchmark
+signature_bytes=3309
+public_key_bytes=1952
+private_key_bytes=4032
+```
+
+Manual S2S token and outbound webhook usage examples:
+
+```python
+from shared.pqc_signing import MLDSASigner, S2S_SIGNING_KEY_PATH, WEBHOOK_SIGNING_KEY_PATH
+from shared.s2s_token import create_s2s_token, verify_s2s_token
+from shared.vault_client import VaultClient
+from shared.webhook_signer import create_webhook_signature_headers, verify_webhook_signature
+
+vault = VaultClient(addr="http://localhost:8200", token="root-token-for-lab-only")
+s2s_signer = MLDSASigner.from_vault(vault, key_path=S2S_SIGNING_KEY_PATH)
+webhook_signer = MLDSASigner.from_vault(vault, key_path=WEBHOOK_SIGNING_KEY_PATH)
+
+token = create_s2s_token(
+    signer=s2s_signer,
+    issuer="payment-service",
+    subject="payment-service",
+    audience="resource-service",
+    tenant_id="11111111-1111-1111-1111-111111111111",
+)
+claims = verify_s2s_token(
+    token,
+    signer=s2s_signer,
+    expected_audience="resource-service",
+    allowed_issuers=["payment-service"],
+)
+
+payload = {"event": "invoice.paid", "data": {"id": "inv-demo"}}
+headers = create_webhook_signature_headers(payload, signer=webhook_signer)
+assert verify_webhook_signature(payload, headers, signer=webhook_signer)
+```
+
 Expected full-stack workflow for later stages:
 
 ```bash
@@ -314,12 +367,12 @@ Use `docker-compose.dev.yml` for service hot reload overrides in later stages.
 
 ## Current Stage
 
-Completed: Stage 11 - external TLS for Kong, HTTPS FastAPI upstreams,
-Kong-side upstream certificate verification, certificate generation scripts,
-and TLS network-plane smoke tests.
+Completed: Stage 12 - real ML-DSA-65 application-layer signing, Vault-backed
+PQC key generation, S2S JWT-like tokens, outbound webhook signatures, and
+benchmark/unit coverage.
 
-Next: Stage 12 - Post-Quantum Cryptography ML-DSA key management, service token
-signing, and outbound webhook signing.
+Next: Stage 13 - Stripe payment service and inbound Stripe webhook HMAC
+verification.
 
 ## Safety Notes
 

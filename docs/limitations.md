@@ -22,6 +22,8 @@ Full mTLS remains a target design item for a hardened deployment.
 
 Vault dev mode is acceptable for the lab only. A production deployment would need
 HA storage, unseal strategy, policies, audit logs, and key lifecycle controls.
+Stage 12 binds Vault to `127.0.0.1:8200` so local key-generation scripts can
+write ML-DSA keys; this host exposure is development-only.
 
 ## Single Keycloak Realm
 
@@ -40,6 +42,18 @@ as production trust material. Generated certificates and private keys under
 Stripe inbound webhooks use Stripe's HMAC-SHA256 signature scheme. ML-DSA is for
 outbound webhooks emitted by this platform, not for replacing Stripe's inbound
 verification.
+
+## ML-DSA Application Layer Scope
+
+Stage 12 uses real ML-DSA-65 through the Python `pqcrypto` package. Keys are
+stored in Vault KV v2 and are loaded by application code for S2S tokens and
+outbound webhook signatures. This does not provide post-quantum TLS, and it does
+not replace Keycloak RS256 access tokens or Stripe's inbound HMAC scheme.
+
+The lab stores ML-DSA private keys in Vault KV v2 for demonstrability. A hardened
+deployment should define key rotation windows, minimize service read access to
+private signing material, and prefer an HSM/KMS-backed signing interface when
+available.
 
 ## Docker Compose Prototype
 
