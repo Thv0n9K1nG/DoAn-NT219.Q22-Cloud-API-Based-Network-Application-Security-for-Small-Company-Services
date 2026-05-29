@@ -98,6 +98,9 @@ services:
       JWT_ISSUER: http://localhost:${KEYCLOAK_HOST_PORT:-18080}/realms/${KEYCLOAK_REALM:-saas-platform}
       VAULT_ADDR: http://vault:8200
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-certfile", "/certs/service.crt", "--ssl-keyfile", "/certs/service.key"]
+    volumes:
+      - ./services/user-service/certs:/certs:ro
     networks:
       - app-net
       - data-net
@@ -109,7 +112,7 @@ services:
       vault:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=3)\""]
+      test: ["CMD-SHELL", "python -c \"import ssl, urllib.request; urllib.request.urlopen('https://127.0.0.1:8000/health/live', timeout=3, context=ssl._create_unverified_context())\""]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -129,6 +132,9 @@ services:
       JWT_ISSUER: http://localhost:${KEYCLOAK_HOST_PORT:-18080}/realms/${KEYCLOAK_REALM:-saas-platform}
       VAULT_ADDR: http://vault:8200
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-certfile", "/certs/service.crt", "--ssl-keyfile", "/certs/service.key"]
+    volumes:
+      - ./services/resource-service/certs:/certs:ro
     networks:
       - app-net
       - data-net
@@ -140,7 +146,7 @@ services:
       vault:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=3)\""]
+      test: ["CMD-SHELL", "python -c \"import ssl, urllib.request; urllib.request.urlopen('https://127.0.0.1:8000/health/live', timeout=3, context=ssl._create_unverified_context())\""]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -160,6 +166,9 @@ services:
       JWT_ISSUER: http://localhost:${KEYCLOAK_HOST_PORT:-18080}/realms/${KEYCLOAK_REALM:-saas-platform}
       VAULT_ADDR: http://vault:8200
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-certfile", "/certs/service.crt", "--ssl-keyfile", "/certs/service.key"]
+    volumes:
+      - ./services/admin-service/certs:/certs:ro
     networks:
       - app-net
       - data-net
@@ -171,7 +180,7 @@ services:
       vault:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=3)\""]
+      test: ["CMD-SHELL", "python -c \"import ssl, urllib.request; urllib.request.urlopen('https://127.0.0.1:8000/health/live', timeout=3, context=ssl._create_unverified_context())\""]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -191,6 +200,9 @@ services:
       JWT_ISSUER: http://localhost:${KEYCLOAK_HOST_PORT:-18080}/realms/${KEYCLOAK_REALM:-saas-platform}
       VAULT_ADDR: http://vault:8200
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-certfile", "/certs/service.crt", "--ssl-keyfile", "/certs/service.key"]
+    volumes:
+      - ./services/payment-service/certs:/certs:ro
     networks:
       - app-net
       - data-net
@@ -202,7 +214,7 @@ services:
       vault:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=3)\""]
+      test: ["CMD-SHELL", "python -c \"import ssl, urllib.request; urllib.request.urlopen('https://127.0.0.1:8000/health/live', timeout=3, context=ssl._create_unverified_context())\""]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -243,6 +255,12 @@ services:
       KONG_LUA_PACKAGE_PATH: /usr/local/share/lua/5.1/?.lua;/usr/local/share/lua/5.1/?/init.lua;;
       KONG_PROXY_LISTEN: 0.0.0.0:8000, 0.0.0.0:8443 ssl
       KONG_ADMIN_LISTEN: "off"
+      KONG_SSL_CERT: /etc/kong/certs/kong.crt
+      KONG_SSL_CERT_KEY: /etc/kong/certs/kong.key
+      KONG_LUA_SSL_TRUSTED_CERTIFICATE: /etc/kong/certs/internal-ca.crt
+      KONG_LUA_SSL_VERIFY_DEPTH: 2
+      KONG_NGINX_PROXY_PROXY_SSL_TRUSTED_CERTIFICATE: /etc/kong/certs/internal-ca.crt
+      KONG_NGINX_PROXY_PROXY_SSL_VERIFY_DEPTH: 2
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_LOG_LEVEL: ${KONG_LOG_LEVEL:-info}
@@ -251,6 +269,7 @@ services:
       - "${KONG_PROXY_HTTPS_PORT:-8443}:8443"
     volumes:
       - ./gateway/kong.yml:/etc/kong/kong.yml:ro
+      - ./gateway/certs:/etc/kong/certs:ro
       - ./gateway/plugins/opa-authz:/usr/local/share/lua/5.1/kong/plugins/opa-authz:ro
     networks:
       - dmz-net

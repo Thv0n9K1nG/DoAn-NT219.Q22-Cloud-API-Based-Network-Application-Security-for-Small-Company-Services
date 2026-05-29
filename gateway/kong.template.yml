@@ -9,6 +9,11 @@ consumers:
         rsa_public_key: |
 __KONG_JWT_PUBLIC_KEY__
 
+ca_certificates:
+  - id: 00000000-0000-4000-8000-000000000011
+    cert: |
+__KONG_INTERNAL_CA_CERT__
+
 plugins:
   - name: correlation-id
     config:
@@ -40,7 +45,11 @@ plugins:
 
 services:
   - name: user-service
-    url: http://user-service:8000
+    url: https://user-service:8000
+    tls_verify: true
+    tls_verify_depth: 2
+    ca_certificates:
+      - 00000000-0000-4000-8000-000000000011
     routes:
       - name: user-api
         paths:
@@ -64,7 +73,11 @@ services:
               size_unit: megabytes
 
   - name: resource-service
-    url: http://resource-service:8000
+    url: https://resource-service:8000
+    tls_verify: true
+    tls_verify_depth: 2
+    ca_certificates:
+      - 00000000-0000-4000-8000-000000000011
     routes:
       - name: resource-api
         paths:
@@ -99,7 +112,11 @@ services:
               size_unit: megabytes
 
   - name: admin-service
-    url: http://admin-service:8000
+    url: https://admin-service:8000
+    tls_verify: true
+    tls_verify_depth: 2
+    ca_certificates:
+      - 00000000-0000-4000-8000-000000000011
     routes:
       - name: admin-api
         paths:
@@ -130,7 +147,11 @@ services:
               size_unit: megabytes
 
   - name: payment-service
-    url: http://payment-service:8000
+    url: https://payment-service:8000
+    tls_verify: true
+    tls_verify_depth: 2
+    ca_certificates:
+      - 00000000-0000-4000-8000-000000000011
     routes:
       - name: payment-api
         paths:

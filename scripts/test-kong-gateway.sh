@@ -28,7 +28,9 @@ assert_status() {
 }
 
 echo "Preparing Stage 10 gateway smoke test..."
-docker compose up -d postgres redis vault keycloak opa user-service resource-service admin-service payment-service >/dev/null
+bash scripts/generate-dev-certs.sh >/dev/null
+docker compose up -d postgres redis vault keycloak opa >/dev/null
+docker compose up -d --force-recreate user-service resource-service admin-service payment-service >/dev/null
 apply_resource_schema
 bash scripts/keycloak-init.sh >/dev/null
 bash scripts/kong-init.sh >/dev/null
