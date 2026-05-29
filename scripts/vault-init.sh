@@ -144,14 +144,7 @@ main() {
   put_kv secret/services/resource-service/db_password value="${RESOURCE_SVC_DB_PASSWORD:-changeme-resource-db}"
   put_kv secret/services/payment-service/db_password value="${PAYMENT_SVC_DB_PASSWORD:-changeme-payment-db}"
   put_kv secret/services/admin-service/db_password value="${ADMIN_SVC_DB_PASSWORD:-changeme-admin-db}"
-  put_kv secret/pqc/s2s-signing \
-    algorithm="ML-DSA-65" \
-    public_key="lab-public-key-placeholder" \
-    private_key="lab-private-key-placeholder"
-  put_kv secret/pqc/webhook-signing \
-    algorithm="ML-DSA-65" \
-    public_key="lab-webhook-public-key-placeholder" \
-    private_key="lab-webhook-private-key-placeholder"
+  echo "PQC ML-DSA keys are generated separately by scripts/generate_mldsa_keys.py."
 
   for service in user-service resource-service payment-service admin-service; do
     write_policy "$service"
