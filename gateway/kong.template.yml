@@ -1,0 +1,163 @@
+_format_version: "3.0"
+_transform: true
+
+consumers:
+  - username: keycloak-jwt-consumer
+    jwt_secrets:
+      - key: "__KONG_JWT_ISSUER__"
+        algorithm: RS256
+        rsa_public_key: |
+__KONG_JWT_PUBLIC_KEY__
+
+plugins:
+  - name: correlation-id
+    config:
+      header_name: X-Request-ID
+      generator: uuid
+      echo_downstream: true
+  - name: cors
+    config:
+      origins:
+        - http://localhost:3001
+        - http://localhost:3002
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      headers:
+        - Authorization
+        - Content-Type
+        - X-Request-ID
+      exposed_headers:
+        - X-Request-ID
+        - X-RateLimit-Limit-Minute
+        - X-RateLimit-Remaining-Minute
+      credentials: true
+      max_age: 3600
+
+services:
+  - name: user-service
+    url: http://user-service:8000
+    routes:
+      - name: user-api
+        paths:
+          - /api/v1/users
+        strip_path: false
+        plugins:
+          - name: jwt
+            config:
+              key_claim_name: iss
+              claims_to_verify:
+                - exp
+              uri_param_names: []
+          - name: opa-authz
+            config:
+              opa_url: http://opa:8181/v1/data/authz/allow
+              required_audience: saas-api
+              enforce_json_content_type: true
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 1
+              size_unit: megabytes
+
+  - name: resource-service
+    url: http://resource-service:8000
+    routes:
+      - name: resource-api
+        paths:
+          - /api/v1/resources
+        strip_path: false
+        plugins:
+          - name: jwt
+            config:
+              key_claim_name: iss
+              claims_to_verify:
+                - exp
+              uri_param_names: []
+          - name: opa-authz
+            config:
+              opa_url: http://opa:8181/v1/data/authz/allow
+              required_audience: saas-api
+              enforce_json_content_type: true
+          - name: rate-limiting
+            config:
+              minute: 20
+              policy: redis
+              limit_by: header
+              header_name: X-Tenant-ID
+              redis:
+                host: redis
+                port: 6379
+                password: "__REDIS_PASSWORD__"
+              fault_tolerant: true
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 1
+              size_unit: megabytes
+
+  - name: admin-service
+    url: http://admin-service:8000
+    routes:
+      - name: admin-api
+        paths:
+          - /api/v1/admin
+        strip_path: false
+        plugins:
+          - name: jwt
+            config:
+              key_claim_name: iss
+              claims_to_verify:
+                - exp
+              uri_param_names: []
+          - name: opa-authz
+            config:
+              opa_url: http://opa:8181/v1/data/authz/allow
+              required_audience: saas-api
+              enforce_json_content_type: true
+          - name: ip-restriction
+            config:
+              allow:
+                - 127.0.0.1
+                - 10.0.0.0/8
+                - 172.16.0.0/12
+                - 192.168.0.0/16
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 1
+              size_unit: megabytes
+
+  - name: payment-service
+    url: http://payment-service:8000
+    routes:
+      - name: payment-api
+        paths:
+          - /api/v1/payments
+        strip_path: false
+        plugins:
+          - name: jwt
+            config:
+              key_claim_name: iss
+              claims_to_verify:
+                - exp
+              uri_param_names: []
+          - name: opa-authz
+            config:
+              opa_url: http://opa:8181/v1/data/authz/allow
+              required_audience: saas-api
+              enforce_json_content_type: true
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 1
+              size_unit: megabytes
+      - name: stripe-webhook
+        paths:
+          - /webhooks/stripe
+        strip_path: false
+        plugins:
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 1
+              size_unit: megabytes
