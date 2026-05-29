@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     vault_pki_role: str = Field(default="internal-services", alias="VAULT_PKI_ROLE")
     database_url: str | None = Field(default=None, alias="DATABASE_URL")
 
+    stripe_secret_key: str | None = Field(default=None, alias="STRIPE_SECRET_KEY")
+    stripe_webhook_secret: str | None = Field(default=None, alias="STRIPE_WEBHOOK_SECRET")
+    payment_outbound_webhook_url: str | None = Field(default=None, alias="PAYMENT_OUTBOUND_WEBHOOK_URL")
+
     request_id_header: str = Field(default="X-Request-ID", alias="REQUEST_ID_HEADER")
     tenant_id_header: str = Field(default="X-Tenant-ID", alias="TENANT_ID_HEADER")
     user_id_header: str = Field(default="X-User-ID", alias="USER_ID_HEADER")
