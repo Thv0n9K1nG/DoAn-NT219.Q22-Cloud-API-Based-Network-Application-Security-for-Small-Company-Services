@@ -209,6 +209,31 @@ services:
       start_period: 15s
     restart: unless-stopped
 
+  opa:
+    image: openpolicyagent/opa:0.65.0
+    command:
+      - run
+      - --server
+      - --addr=0.0.0.0:8181
+      - --log-format=json
+      - --log-level=info
+      - /policies/policies
+      - /policies/data
+    ports:
+      - "${OPA_HOST_PORT:-8181}:8181"
+    volumes:
+      - ./opa:/policies:ro
+    networks:
+      - dmz-net
+      - app-net
+    healthcheck:
+      test: ["CMD", "opa", "eval", "true"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
   loki:
     image: grafana/loki:3.0.0
     command: -config.file=/etc/loki/config.yml
