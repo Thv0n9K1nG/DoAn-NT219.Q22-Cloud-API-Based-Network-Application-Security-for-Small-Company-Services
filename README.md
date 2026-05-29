@@ -263,6 +263,28 @@ Remove-Item $OPA_INPUT
 Expected outputs are `{"result":true}`, `{"result":false}`, and
 `{"result":true}` respectively.
 
+Run Stage 10 Kong gateway smoke tests:
+
+```bash
+bash scripts/kong-init.sh
+docker compose up -d postgres redis vault keycloak opa user-service resource-service admin-service payment-service kong
+bash scripts/test-kong-gateway.sh
+```
+
+Expected output includes:
+
+```text
+no token is rejected by gateway            expected=401 actual=401
+tenant user can list resources             expected=200 actual=200
+tenant user is denied admin route by OPA   expected=403 actual=403
+non-json API write is rejected             expected=415 actual=415
+stripe webhook route bypasses JWT          expected=not-401 actual=404
+rate limit status summary:
+     20 200
+      5 429
+Stage 10 Kong gateway smoke test passed.
+```
+
 Expected full-stack workflow for later stages:
 
 ```bash
@@ -273,11 +295,11 @@ Use `docker-compose.dev.yml` for service hot reload overrides in later stages.
 
 ## Current Stage
 
-Completed: Stage 9 - OPA authorization policy, role-permission data, Rego unit
-tests, Docker Compose OPA service, and HTTP policy smoke tests.
+Completed: Stage 10 - Kong DB-less gateway routes, JWT validation,
+OPA authorization plugin, tenant header injection, Redis-backed rate limiting,
+WAF-lite controls, and gateway smoke tests.
 
-Next: Stage 10 - Kong API Gateway routes, JWT validation, rate limit, WAF-lite,
-and OPA authorization calls.
+Next: Stage 11 - TLS external and mTLS between Kong and microservices.
 
 ## Safety Notes
 
