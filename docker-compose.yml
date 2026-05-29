@@ -234,6 +234,48 @@ services:
       start_period: 5s
     restart: unless-stopped
 
+  kong:
+    image: kong:3.6.1
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
+      KONG_PLUGINS: bundled,opa-authz
+      KONG_LUA_PACKAGE_PATH: /usr/local/share/lua/5.1/?.lua;/usr/local/share/lua/5.1/?/init.lua;;
+      KONG_PROXY_LISTEN: 0.0.0.0:8000, 0.0.0.0:8443 ssl
+      KONG_ADMIN_LISTEN: "off"
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_LOG_LEVEL: ${KONG_LOG_LEVEL:-info}
+    ports:
+      - "${KONG_PROXY_HTTP_PORT:-8000}:8000"
+      - "${KONG_PROXY_HTTPS_PORT:-8443}:8443"
+    volumes:
+      - ./gateway/kong.yml:/etc/kong/kong.yml:ro
+      - ./gateway/plugins/opa-authz:/usr/local/share/lua/5.1/kong/plugins/opa-authz:ro
+    networks:
+      - dmz-net
+      - app-net
+    depends_on:
+      redis:
+        condition: service_healthy
+      opa:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      resource-service:
+        condition: service_healthy
+      admin-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+
   loki:
     image: grafana/loki:3.0.0
     command: -config.file=/etc/loki/config.yml
