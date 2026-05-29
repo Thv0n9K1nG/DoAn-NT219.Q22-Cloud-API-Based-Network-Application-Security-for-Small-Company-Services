@@ -285,6 +285,25 @@ rate limit status summary:
 Stage 10 Kong gateway smoke test passed.
 ```
 
+Run Stage 11 TLS network-plane tests:
+
+```bash
+bash scripts/generate-dev-certs.sh
+bash scripts/kong-init.sh
+bash scripts/test-tls-plane.sh
+```
+
+Expected output includes:
+
+```text
+subject=CN = localhost
+issuer=CN = saas-platform-internal-ca
+resource-service upstream certificate verify: ok
+external TLS no-token gateway request      expected=401 actual=401
+Kong routes to HTTPS upstream              expected=200 actual=200
+Stage 11 TLS plane test passed.
+```
+
 Expected full-stack workflow for later stages:
 
 ```bash
@@ -295,11 +314,12 @@ Use `docker-compose.dev.yml` for service hot reload overrides in later stages.
 
 ## Current Stage
 
-Completed: Stage 10 - Kong DB-less gateway routes, JWT validation,
-OPA authorization plugin, tenant header injection, Redis-backed rate limiting,
-WAF-lite controls, and gateway smoke tests.
+Completed: Stage 11 - external TLS for Kong, HTTPS FastAPI upstreams,
+Kong-side upstream certificate verification, certificate generation scripts,
+and TLS network-plane smoke tests.
 
-Next: Stage 11 - TLS external and mTLS between Kong and microservices.
+Next: Stage 12 - Post-Quantum Cryptography ML-DSA key management, service token
+signing, and outbound webhook signing.
 
 ## Safety Notes
 
