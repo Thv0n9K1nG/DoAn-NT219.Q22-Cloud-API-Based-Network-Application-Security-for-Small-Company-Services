@@ -1,0 +1,29 @@
+{
+  "role_permissions": {
+    "tenant_admin": [
+      "read:users",
+      "write:users",
+      "delete:users",
+      "read:resources",
+      "write:resources",
+      "delete:resources",
+      "read:billing"
+    ],
+    "tenant_user": [
+      "read:resources",
+      "write:resources"
+    ],
+    "platform_admin": [
+      "read:users",
+      "write:users",
+      "delete:users",
+      "read:resources",
+      "write:resources",
+      "delete:resources",
+      "read:billing",
+      "write:billing",
+      "read:admin",
+      "write:admin"
+    ]
+  }
+}
