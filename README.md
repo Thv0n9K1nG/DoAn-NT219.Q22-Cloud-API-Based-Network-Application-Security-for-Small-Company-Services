@@ -232,6 +232,37 @@ docker compose logs --tail=80 resource-service | Select-String "security.bola_at
 Expected result: beta receives `403 ACCESS_DENIED`, and Resource Service logs a
 `security.bola_attempt` event with attacker tenant and resource tenant IDs.
 
+Run Stage 9 OPA policy tests and start the OPA server:
+
+```bash
+bash scripts/test-opa.sh
+docker compose up -d opa
+```
+
+Smoke test OPA allow/deny decisions:
+
+```powershell
+$OPA_INPUT = New-TemporaryFile
+@'
+{"input":{"method":"GET","path":["api","v1","resources"],"tenant_id":"11111111-1111-1111-1111-111111111111","user_id":"u1","roles":["tenant_user"]}}
+'@ | Set-Content -NoNewline $OPA_INPUT
+curl.exe -s -X POST http://localhost:8181/v1/data/authz/allow -H "Content-Type: application/json" --data-binary "@$OPA_INPUT"
+
+@'
+{"input":{"method":"GET","path":["api","v1","admin"],"tenant_id":"11111111-1111-1111-1111-111111111111","user_id":"u1","roles":["tenant_user"]}}
+'@ | Set-Content -NoNewline $OPA_INPUT
+curl.exe -s -X POST http://localhost:8181/v1/data/authz/allow -H "Content-Type: application/json" --data-binary "@$OPA_INPUT"
+
+@'
+{"input":{"tenant_id":"11111111-1111-1111-1111-111111111111","resource_tenant_id":"22222222-2222-2222-2222-222222222222","resource_id":"res-123","user_id":"u1"}}
+'@ | Set-Content -NoNewline $OPA_INPUT
+curl.exe -s -X POST http://localhost:8181/v1/data/authz/deny_bola -H "Content-Type: application/json" --data-binary "@$OPA_INPUT"
+Remove-Item $OPA_INPUT
+```
+
+Expected outputs are `{"result":true}`, `{"result":false}`, and
+`{"result":true}` respectively.
+
 Expected full-stack workflow for later stages:
 
 ```bash
@@ -242,11 +273,11 @@ Use `docker-compose.dev.yml` for service hot reload overrides in later stages.
 
 ## Current Stage
 
-Completed: Stage 8 - User, Resource, and Admin business endpoints with
-tenant-aware role checks, service-level BOLA protection, structured security
-logging, and focused route tests.
+Completed: Stage 9 - OPA authorization policy, role-permission data, Rego unit
+tests, Docker Compose OPA service, and HTTP policy smoke tests.
 
-Next: Stage 9 - OPA authorization policy and policy unit tests.
+Next: Stage 10 - Kong API Gateway routes, JWT validation, rate limit, WAF-lite,
+and OPA authorization calls.
 
 ## Safety Notes
 
