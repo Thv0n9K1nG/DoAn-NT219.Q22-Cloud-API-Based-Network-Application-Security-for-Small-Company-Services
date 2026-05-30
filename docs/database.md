@@ -12,6 +12,18 @@ introduced yet so the lab can prove tenant isolation with plain PostgreSQL.
 | `scripts/seed-data.sql` | Inserts deterministic alpha/beta tenants, users, resources, and payments |
 | `scripts/test-rls.sql`  | Proves tenant isolation as `resource_service_app`                        |
 
+## Payment Webhook Idempotency
+
+Stage 13 adds `stripe_webhook_events` to record processed Stripe event IDs. This
+table prevents duplicate side effects when Stripe retries the same event.
+
+| Column              | Purpose                                      |
+| ------------------- | -------------------------------------------- |
+| `event_id`          | Stripe event ID, primary key                 |
+| `event_type`        | Stripe event type, for example `payment_intent.succeeded` |
+| `payment_intent_id` | Related Stripe Payment Intent ID             |
+| `processed_at`      | Server-side processing timestamp             |
+
 ## Tenant IDs
 
 | Tenant         | UUID                                   |

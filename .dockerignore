@@ -1,0 +1,25 @@
+.git
+.context
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[codz]
+.pytest_cache/
+
+# Generated certificates, keys, and gateway render output must stay local.
+*.key
+*.crt
+*.pem
+*.p12
+*.pfx
+gateway/certs/*
+!gateway/certs/.gitkeep
+gateway/kong.yml
+services/*/certs/*
+!services/*/certs/.gitkeep
+
+# Runtime outputs and local reports are not build inputs.
+tests/reports/*
+logs/
+.vault-token

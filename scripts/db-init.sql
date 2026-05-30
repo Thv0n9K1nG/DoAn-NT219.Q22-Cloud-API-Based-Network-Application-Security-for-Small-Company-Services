@@ -67,12 +67,20 @@ CREATE TABLE IF NOT EXISTS payments (
   CONSTRAINT payments_status_check CHECK (status IN ('requires_payment_method', 'requires_confirmation', 'processing', 'succeeded', 'canceled', 'failed'))
 );
 
+CREATE TABLE IF NOT EXISTS stripe_webhook_events (
+  event_id TEXT PRIMARY KEY,
+  event_type TEXT NOT NULL,
+  payment_intent_id TEXT NULL,
+  processed_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON users(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_users_email_tenant ON users(tenant_id, email);
 CREATE INDEX IF NOT EXISTS idx_resources_tenant_id ON resources(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_resources_tenant_owner ON resources(tenant_id, owner_user_id);
 CREATE INDEX IF NOT EXISTS idx_payments_tenant_id ON payments(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_payments_tenant_user ON payments(tenant_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_stripe_webhook_events_payment_intent ON stripe_webhook_events(payment_intent_id);
 
 DROP TRIGGER IF EXISTS trg_tenants_updated_at ON tenants;
 CREATE TRIGGER trg_tenants_updated_at
@@ -120,5 +128,6 @@ GRANT SELECT ON tenants TO user_service_app, resource_service_app, payment_servi
 GRANT SELECT, INSERT, UPDATE ON users TO user_service_app, admin_service_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON resources TO resource_service_app, admin_service_app;
 GRANT SELECT, INSERT, UPDATE ON payments TO payment_service_app, admin_service_app;
+GRANT SELECT, INSERT ON stripe_webhook_events TO payment_service_app, admin_service_app;
 
 COMMIT;
