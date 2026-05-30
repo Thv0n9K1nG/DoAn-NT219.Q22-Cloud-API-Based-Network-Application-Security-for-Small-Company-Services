@@ -1,6 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 
+# Bootstrap scripts read .env explicitly; Docker Compose interpolation does not export it to this shell.
+if [[ -f .env ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source .env
+  set +a
+fi
+
 VAULT_DEV_TOKEN="${VAULT_DEV_TOKEN:-root-token-for-lab-only}"
 VAULT_ADDR_IN_CONTAINER="${VAULT_ADDR_IN_CONTAINER:-http://127.0.0.1:8200}"
 PKI_ROLE="${VAULT_PKI_ROLE:-internal-services}"

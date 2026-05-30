@@ -7,11 +7,13 @@
       "read:resources",
       "write:resources",
       "delete:resources",
-      "read:billing"
+      "read:billing",
+      "write:billing"
     ],
     "tenant_user": [
       "read:resources",
-      "write:resources"
+      "write:resources",
+      "write:billing"
     ],
     "platform_admin": [
       "read:users",

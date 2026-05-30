@@ -32,6 +32,26 @@ test_tenant_user_post_resources_allowed if {
 	}
 }
 
+test_tenant_user_post_payment_intent_allowed if {
+	allow with input as {
+		"method": "POST",
+		"path": ["api", "v1", "payments", "intent"],
+		"tenant_id": "11111111-1111-1111-1111-111111111111",
+		"user_id": "u1",
+		"roles": ["tenant_user"]
+	}
+}
+
+test_tenant_admin_post_payment_intent_allowed if {
+	allow with input as {
+		"method": "POST",
+		"path": ["api", "v1", "payments", "intent"],
+		"tenant_id": "11111111-1111-1111-1111-111111111111",
+		"user_id": "admin-1",
+		"roles": ["tenant_admin"]
+	}
+}
+
 test_tenant_user_delete_resources_denied if {
 	not allow with input as {
 		"method": "DELETE",
