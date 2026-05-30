@@ -25,3 +25,5 @@ def test_openapi_schema():
     assert schema["info"]["title"] == "Payment Service API"
     assert "/api/v1/payments/metadata" in schema["paths"]
     assert "/api/v1/webhooks/metadata" in schema["paths"]
+    assert "/api/v1/payments/intent" in schema["paths"]
+    assert "/webhooks/stripe" in schema["paths"]
