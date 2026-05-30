@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ServiceInfo(BaseModel):
@@ -16,8 +16,25 @@ class PaymentCreate(BaseModel):
     amount: int = Field(gt=0)
     currency: str = Field(default="usd", min_length=3, max_length=3)
 
+    @field_validator("currency")
+    @classmethod
+    def normalize_currency(cls, value: str) -> str:
+        normalized = value.lower()
+        if normalized not in {"usd", "vnd"}:
+            raise ValueError("currency must be one of: usd, vnd")
+        return normalized
+
+
+class PaymentIntentResponse(BaseModel):
+    payment_id: UUID
+    payment_intent_id: str
+    client_secret: str
+    status: str
+
 
 class PaymentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     tenant_id: UUID
     user_id: str
@@ -31,4 +48,6 @@ class PaymentResponse(BaseModel):
 class WebhookAck(BaseModel):
     received: bool
     event_type: str | None = None
-
+    payment_intent_id: str | None = None
+    duplicate: bool = False
+    status: str | None = None

@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from app.api.v1.routes import router as api_router
+from app.api.v1.webhook import router as webhook_router
 from app.core.config import settings
 from app.core.logging import configure_service_logging
 from app.db.database import check_database_ready
@@ -22,6 +23,7 @@ app.state.settings = settings
 app.add_middleware(RequestContextMiddleware, settings=settings)
 register_error_handlers(app)
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(webhook_router)
 
 
 @app.get("/health/live", tags=["health"])
@@ -37,4 +39,3 @@ async def ready():
         status_code=503,
         content={"status": "not_ready", "service": settings.service_name, "database": "unavailable"},
     )
-
