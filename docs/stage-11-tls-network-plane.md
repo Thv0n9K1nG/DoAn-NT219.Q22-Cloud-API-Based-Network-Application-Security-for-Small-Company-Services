@@ -59,9 +59,9 @@ Generated lab certificates under gateway/certs and services/*/certs.
 These files are intentionally ignored by Git.
 ```
 
-The generated private keys and certificates are ignored by Git. `gateway/kong.yml`
-is rendered from `gateway/kong.template.yml` and includes public trust material
-required by Kong DB-less mode.
+The generated private keys, certificates, and rendered `gateway/kong.yml` are
+ignored by Git. `gateway/kong.yml` is rendered from `gateway/kong.template.yml`
+and can include internal trust material required by Kong DB-less mode.
 
 ## Test Commands
 

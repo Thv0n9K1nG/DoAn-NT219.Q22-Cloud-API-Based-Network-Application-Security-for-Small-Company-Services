@@ -357,6 +357,36 @@ headers = create_webhook_signature_headers(payload, signer=webhook_signer)
 assert verify_webhook_signature(payload, headers, signer=webhook_signer)
 ```
 
+Run Stage 13 Payment Service and Stripe webhook tests:
+
+```bash
+pytest services/payment-service/tests -v
+```
+
+Expected output includes:
+
+```text
+test_create_payment_intent_uses_tenant_from_jwt PASSED
+test_cross_tenant_payment_read_is_denied_and_logged PASSED
+test_stripe_webhook_rejects_forged_signature PASSED
+test_stripe_webhook_accepts_valid_signature_and_processes_event PASSED
+```
+
+Manual forged webhook check through Kong:
+
+```bash
+curl -k -i https://localhost:8443/webhooks/stripe \
+  -H "Content-Type: application/json" \
+  -H "Stripe-Signature: t=123,v1=forged" \
+  -d '{"id":"evt_forged","type":"payment_intent.succeeded","data":{"object":{"id":"pi_forged"}}}'
+```
+
+Expected status:
+
+```text
+HTTP/1.1 400 Bad Request
+```
+
 Expected full-stack workflow for later stages:
 
 ```bash
@@ -367,12 +397,11 @@ Use `docker-compose.dev.yml` for service hot reload overrides in later stages.
 
 ## Current Stage
 
-Completed: Stage 12 - real ML-DSA-65 application-layer signing, Vault-backed
-PQC key generation, S2S JWT-like tokens, outbound webhook signatures, and
-benchmark/unit coverage.
+Completed: Stage 13 - Stripe Payment Intent API, inbound Stripe HMAC webhook
+verification, webhook idempotency table, tenant-scoped payment reads, and
+ML-DSA signed outbound payment notification logs.
 
-Next: Stage 13 - Stripe payment service and inbound Stripe webhook HMAC
-verification.
+Next: Stage 14 - Loki, Promtail, Grafana dashboards, and security alerts.
 
 ## Safety Notes
 

@@ -1,13 +1,14 @@
 # Stage 10 Kong API Gateway
 
 Stage 10 makes Kong the external API entry point for the lab. Kong runs in
-DB-less mode so gateway routes, consumers, plugins, and upstreams are fully
-reproducible from `gateway/kong.yml`.
+DB-less mode so gateway routes, consumers, plugins, and upstreams are rendered
+locally from `gateway/kong.template.yml` into ignored `gateway/kong.yml`.
 
 ## Scope Implemented
 
 - Added Kong DB-less declarative config template in `gateway/kong.template.yml`.
-- Added rendered Kong config in `gateway/kong.yml`.
+- Added rendered Kong config workflow; `gateway/kong.yml` is generated locally
+  and ignored because it can embed internal certificate material.
 - Added custom Kong plugin `opa-authz` under `gateway/plugins/opa-authz/`.
 - Added `scripts/kong-init.sh` to render `gateway/kong.yml` from the current
   Keycloak realm public key.
