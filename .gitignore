@@ -247,3 +247,6 @@ Thumbs.db
 
 # Local Compose overrides
 docker-compose.override.yml
+
+# Internal cert in kong
+gateway/kong.yml
