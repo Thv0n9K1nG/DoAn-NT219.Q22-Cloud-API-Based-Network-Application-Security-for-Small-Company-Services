@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: NT219 dashboards
+    orgId: 1
+    folder: NT219 SaaS Security
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards

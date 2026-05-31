@@ -1,0 +1,63 @@
+{
+  "uid": "nt219-tenant-activity",
+  "title": "NT219 Tenant Activity",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "tags": ["nt219", "tenant", "loki"],
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Requests per tenant",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {"refId": "A", "datasource": {"type": "loki", "uid": "loki"}, "expr": "sum by (tenant_id) (count_over_time({event=\"api.request\", tenant_id!=\"\"}[5m]))"}
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Resource creates per tenant",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {"refId": "A", "datasource": {"type": "loki", "uid": "loki"}, "expr": "sum by (tenant_id) (count_over_time({event=\"resource.create\", tenant_id!=\"\"}[5m]))"}
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Payments per tenant",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [
+        {"refId": "A", "datasource": {"type": "loki", "uid": "loki"}, "expr": "sum by (tenant_id) (count_over_time({event=~\"payment\\\\..+\", tenant_id!=\"\"}[5m]))"}
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Admin actions",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [
+        {"refId": "A", "datasource": {"type": "loki", "uid": "loki"}, "expr": "sum by (event) (count_over_time({event=~\"admin\\\\..+\"}[5m]))"}
+      ]
+    },
+    {
+      "id": 5,
+      "type": "table",
+      "title": "Recent tenant activity",
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 16},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "expr": "{tenant_id!=\"\"} | json | line_format \"{{.timestamp}} tenant={{.tenant_id}} user={{.user_id}} service={{.service}} event={{.event}} path={{.path}} status={{.status_code}}\""
+        }
+      ]
+    }
+  ]
+}

@@ -100,8 +100,6 @@ services:
       JWT_AUDIENCE: ${JWT_AUDIENCE:-saas-api}
       JWT_ISSUER: http://localhost:${KEYCLOAK_HOST_PORT:-18080}/realms/${KEYCLOAK_REALM:-saas-platform}
       VAULT_ADDR: http://vault:8200
-      VAULT_ROLE_ID: ${PAYMENT_SVC_VAULT_ROLE_ID:-}
-      VAULT_SECRET_ID: ${PAYMENT_SVC_VAULT_SECRET_ID:-}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-certfile", "/certs/service.crt", "--ssl-keyfile", "/certs/service.key"]
     volumes:
@@ -204,6 +202,8 @@ services:
       JWT_AUDIENCE: ${JWT_AUDIENCE:-saas-api}
       JWT_ISSUER: http://localhost:${KEYCLOAK_HOST_PORT:-18080}/realms/${KEYCLOAK_REALM:-saas-platform}
       VAULT_ADDR: http://vault:8200
+      VAULT_ROLE_ID: ${PAYMENT_SVC_VAULT_ROLE_ID:-}
+      VAULT_SECRET_ID: ${PAYMENT_SVC_VAULT_SECRET_ID:-}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-certfile", "/certs/service.crt", "--ssl-keyfile", "/certs/service.key"]
     volumes:
@@ -306,7 +306,10 @@ services:
     volumes:
       - ./observability/loki/config.yml:/etc/loki/config.yml:ro
       - loki-data:/loki
+    ports:
+      - "127.0.0.1:${LOKI_HOST_PORT:-3100}:3100"
     networks:
+      - dmz-net
       - data-net
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3100/ready || exit 1"]
@@ -325,10 +328,12 @@ services:
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
     ports:
-      - "3000:3000"
+      - "127.0.0.1:${GRAFANA_HOST_PORT:-3000}:3000"
     volumes:
       - grafana-data:/var/lib/grafana
       - ./observability/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./observability/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./observability/grafana/alerts:/etc/grafana/provisioning/alerting:ro
     networks:
       - dmz-net
       - data-net
@@ -350,7 +355,7 @@ services:
     command: -config.file=/etc/promtail/config.yml
     volumes:
       - ./observability/promtail/config.yml:/etc/promtail/config.yml:ro
-      - /var/log:/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - data-net
     depends_on:

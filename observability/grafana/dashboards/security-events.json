@@ -1,0 +1,63 @@
+{
+  "uid": "nt219-security-events",
+  "title": "NT219 Security Events",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "tags": ["nt219", "security", "loki"],
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Auth failures",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {"refId": "A", "datasource": {"type": "loki", "uid": "loki"}, "expr": "sum(count_over_time({event=\"security.auth_failed\"}[5m]))"}
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "BOLA attempts",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {"refId": "A", "datasource": {"type": "loki", "uid": "loki"}, "expr": "sum(count_over_time({event=\"security.bola_attempt\"}[5m]))"}
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Invalid Stripe signatures",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [
+        {"refId": "A", "datasource": {"type": "loki", "uid": "loki"}, "expr": "sum(count_over_time({event=\"security.invalid_webhook_signature\"}[5m]))"}
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Rate limit responses",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [
+        {"refId": "A", "datasource": {"type": "loki", "uid": "loki"}, "expr": "sum(count_over_time({status_code=\"429\"}[5m]))"}
+      ]
+    },
+    {
+      "id": 5,
+      "type": "logs",
+      "title": "Security event stream",
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 16},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "expr": "{event=~\"security\\\\..+\"} | json | line_format \"{{.timestamp}} {{.event}} service={{.service}} tenant={{.tenant_id}} user={{.user_id}} request_id={{.request_id}} {{.message}}\""
+        }
+      ]
+    }
+  ]
+}
