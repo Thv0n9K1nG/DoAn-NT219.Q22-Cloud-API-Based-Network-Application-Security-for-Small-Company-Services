@@ -102,15 +102,7 @@ docker run --rm -v "${PWD}:/src" -w /src semgrep/semgrep:1.100.0 semgrep scan \
 Powershell version:
 
 ```powershell
-docker run --rm -v "${PWD}:/src" -w /src semgrep/semgrep:1.100.0 semgrep scan `
-  --config=p/python `
-  --config=p/jwt `
-  --config=p/secrets `
-  --metrics=off `
-  --error `
-  --json `
-  --output=tests/reports/semgrep-report.json `
-  services shared scripts opa
+docker run --rm -v "${PWD}:/src" -w /src semgrep/semgrep:1.100.0 semgrep scan --config=p/python --config=p/jwt --config=p/secrets --metrics=off --error --json --output=tests/reports/semgrep-report.json services shared scripts opa
 ```
 
 Expected output includes:
@@ -164,7 +156,9 @@ no output and exit code 0
 The DAST workflow is intentionally manual:
 
 ```text
-Actions -> DAST API Scan -> Run workflow -> target_url=<OpenAPI URL>
+Actions -> DAST API Scan -> Run workflow
+target_url=<OpenAPI document URL reachable by ZAP>
+target_override=<optional API base URL>
 ```
 
 Expected successful workflow artifacts:
@@ -174,35 +168,36 @@ zap-report.json
 zap-report.html
 ```
 
-Local ZAP smoke testing was attempted with a temporary OpenAPI endpoint, but the
-local Docker pull for the ZAP image timed out after several minutes. No
-application test failed; this is recorded as an environment/tooling limitation.
-Run the manual workflow or a local ZAP command when the ZAP image is available:
-
-```bash
-docker run --rm -v "${PWD}/tests/reports:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable zap-api-scan.py \
-  -t "https://localhost:8443/openapi.json" \
-  -f openapi \
-  -J zap-report.json \
-  -r zap-report.html \
-  -I
-```
-
-Version can be run on Powershell:
+Kong does not expose a root `/openapi.json` route. The FastAPI OpenAPI documents
+live inside each service container, while Kong only routes the business API
+paths. For local DAST, generate a gateway-facing OpenAPI file and serve that file
+to the ZAP container:
 
 ```powershell
-docker run --rm -v "${PWD}/tests/reports:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable zap-api-scan.py -t "https://localhost:8443/openapi.json" -f openapi -J zap-report.json -r zap-report.html -I
+powershell -ExecutionPolicy Bypass -File scripts/test-zap-local.ps1
 ```
 
-Use **host.docker.internal** instead of **localhost** because api run on host not in container
+Expected output includes:
 
-```powershell
-docker run --rm -v "${PWD}/tests/reports:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable zap-api-scan.py -t "https://host.docker.internal:8443/openapi.json" -f openapi -J zap-report.json -r zap-report.html -I -z "-config network.https.checkCertificate=false"
+```text
+wrote ...\tests\reports\zap-openapi.json server_url=https://host.docker.internal:8443
+Running ZAP against OpenAPI spec: http://host.docker.internal:18090/zap-openapi.json
+Using override, new target: https://host.docker.internal:8443
+Number of Imported URLs: 11
+FAIL-NEW: 0
 ```
 
-Use a reachable OpenAPI URL. If the gateway uses self-signed TLS and ZAP cannot
-connect, scan a staging URL or an internal HTTP OpenAPI endpoint for the DAST
-job.
+Observed local output on this lab also included these WARN findings:
+
+```text
+WARN-NEW: Strict-Transport-Security Header Not Set [10035]
+WARN-NEW: Server Leaks Version Information via "Server" HTTP Response Header Field [10036]
+```
+
+The local script uses `host.docker.internal` because ZAP runs inside a Docker
+container and must reach the host-published Kong port. It also passes
+`-z "-config network.https.checkCertificate=false"` for the lab self-signed TLS
+certificate.
 
 ## Security Notes
 
@@ -226,6 +221,7 @@ bash scripts/test-ci-security.sh
 python -m pip_audit -r requirements-dev.txt
 docker run --rm -v "${PWD}:/src" -w /src semgrep/semgrep:1.100.0 semgrep scan ...
 docker compose build user-service resource-service admin-service payment-service
+powershell -ExecutionPolicy Bypass -File scripts/test-zap-local.ps1
 python -c "... yaml.safe_load(...) ..."
 ```
 
@@ -239,7 +235,7 @@ pip-audit: No known vulnerabilities found
 Semgrep: 0 findings
 Docker build: all four service images built
 Workflow YAML: parsed successfully
-ZAP local smoke: blocked by local image pull timeout
+ZAP local scan: FAIL-NEW 0, WARN-NEW 2
 ```
 
 ## Files Added or Changed
@@ -249,6 +245,8 @@ ZAP local smoke: blocked by local image pull timeout
 - `.github/workflows/dast.yml`
 - `.github/dependabot.yml`
 - `scripts/test-ci-security.sh`
+- `scripts/generate-zap-openapi.py`
+- `scripts/test-zap-local.ps1`
 - `requirements-dev.txt`
 - `pyproject.toml`
 - `services/payment-service/app/services/payment_service.py`
