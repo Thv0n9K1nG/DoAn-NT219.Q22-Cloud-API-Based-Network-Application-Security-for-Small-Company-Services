@@ -419,6 +419,19 @@ Expected output includes `ready`, Grafana database status `ok`, datasource UID
 `NT219 Tenant Activity`, and alert rules `HighAuthFailureRate`,
 `BOLAAttemptDetected`, `RateLimitViolation`, `StripeWebhookFailure`.
 
+Run Stage 15 local CI/security checks before pushing:
+
+```bash
+python -m pip install -r requirements-dev.txt
+bash scripts/test-ci-security.sh
+docker run --rm -v "${PWD}:/src" -w /src semgrep/semgrep:1.100.0 semgrep scan --config=p/python --config=p/jwt --config=p/secrets --metrics=off --error --json --output=tests/reports/semgrep-report.json services shared scripts opa
+docker compose build user-service resource-service admin-service payment-service
+```
+
+Expected output includes `58 passed`, `PASS: 14/14`,
+`No known vulnerabilities found`, `0 findings`, and all four service images
+built successfully.
+
 Expected full-stack workflow for later stages:
 
 ```bash
@@ -429,10 +442,10 @@ Use `docker-compose.dev.yml` for service hot reload overrides in later stages.
 
 ## Current Stage
 
-Completed: Stage 14 - Loki, Promtail, Grafana dashboards, and security alerts
-for API traffic, tenant activity, and security events.
+Completed: Stage 15 - GitHub Actions security checks, Docker build matrix,
+Dependabot, and manual ZAP DAST workflow.
 
-Next: Stage 15 - CI/CD security automation.
+Next: Stage 16 - Security testing and attack simulation.
 
 ## Safety Notes
 
