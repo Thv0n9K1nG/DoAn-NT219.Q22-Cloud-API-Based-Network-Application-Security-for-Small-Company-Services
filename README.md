@@ -387,6 +387,38 @@ Expected status:
 HTTP/1.1 400 Bad Request
 ```
 
+Run Stage 14 observability tests and start the Loki/Grafana/Promtail stack:
+
+```bash
+pytest tests/test_observability_config.py services/resource-service/tests/test_logging.py services/payment-service/tests/test_stripe_webhook.py -v
+docker compose config --quiet
+docker compose up -d --force-recreate loki grafana promtail
+```
+
+Expected output includes:
+
+```text
+9 passed
+Container nt219-cloud-api-security-loki-1     Healthy
+Container nt219-cloud-api-security-grafana-1  Healthy
+Container nt219-cloud-api-security-promtail-1 Started
+```
+
+Verify Loki and Grafana provisioning:
+
+```bash
+curl.exe -s http://127.0.0.1:3100/ready
+curl.exe -s -u admin:changeme-grafana http://127.0.0.1:3000/api/health
+curl.exe -s -u admin:changeme-grafana http://127.0.0.1:3000/api/datasources/uid/loki
+curl.exe -s -u admin:changeme-grafana "http://127.0.0.1:3000/api/search?query=NT219"
+curl.exe -s -u admin:changeme-grafana http://127.0.0.1:3000/api/v1/provisioning/alert-rules
+```
+
+Expected output includes `ready`, Grafana database status `ok`, datasource UID
+`loki`, dashboards `NT219 API Traffic Overview`, `NT219 Security Events`,
+`NT219 Tenant Activity`, and alert rules `HighAuthFailureRate`,
+`BOLAAttemptDetected`, `RateLimitViolation`, `StripeWebhookFailure`.
+
 Expected full-stack workflow for later stages:
 
 ```bash
@@ -397,11 +429,10 @@ Use `docker-compose.dev.yml` for service hot reload overrides in later stages.
 
 ## Current Stage
 
-Completed: Stage 13 - Stripe Payment Intent API, inbound Stripe HMAC webhook
-verification, webhook idempotency table, tenant-scoped payment reads, and
-ML-DSA signed outbound payment notification logs.
+Completed: Stage 14 - Loki, Promtail, Grafana dashboards, and security alerts
+for API traffic, tenant activity, and security events.
 
-Next: Stage 14 - Loki, Promtail, Grafana dashboards, and security alerts.
+Next: Stage 15 - CI/CD security automation.
 
 ## Safety Notes
 
