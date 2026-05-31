@@ -4,9 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       target_url:
-        description: OpenAPI document URL for the lab or staging target.
+        description: OpenAPI document URL reachable by the ZAP container.
         required: true
-        default: https://localhost:8443/openapi.json
+        default: https://staging.example.local/openapi.json
+      target_override:
+        description: Optional API base URL to override servers from the OpenAPI document.
+        required: false
+        default: ""
       fail_on_warn:
         description: Fail when ZAP reports WARN findings.
         required: true
@@ -31,12 +35,17 @@ jobs:
           if [ "${{ inputs.fail_on_warn }}" = "true" ]; then
             fail_flag=""
           fi
+          override_arg=()
+          if [ -n "${{ inputs.target_override }}" ]; then
+            override_arg=(-O "${{ inputs.target_override }}")
+          fi
           docker run --rm \
             -v "$PWD/tests/reports:/zap/wrk:rw" \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-api-scan.py \
               -t "${{ inputs.target_url }}" \
               -f openapi \
+              "${override_arg[@]}" \
               -J zap-report.json \
               -r zap-report.html \
               $fail_flag
