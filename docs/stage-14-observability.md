@@ -218,9 +218,9 @@ docker compose up -d postgres redis vault keycloak opa user-service resource-ser
 Generate an invalid Stripe signature event:
 
 ```bash
-curl.exe -k -i https://localhost:8443/webhooks/stripe ^
-  -H "Content-Type: application/json" ^
-  -H "Stripe-Signature: t=123,v1=forged" ^
+curl.exe -k -i https://localhost:8443/webhooks/stripe `
+  -H "Content-Type: application/json" `
+  -H "Stripe-Signature: t=123,v1=forged" `
   -d "{\"id\":\"evt_forged\",\"type\":\"payment_intent.succeeded\",\"data\":{\"object\":{\"id\":\"pi_forged\"}}}"
 ```
 
@@ -236,6 +236,13 @@ Query Loki for the event:
 curl.exe -G -s "http://127.0.0.1:3100/loki/api/v1/query" --data-urlencode "query={event=\"security.invalid_webhook_signature\"}"
 ```
 
+Powershell version:
+
+```powershell
+$body = @{query='{event="security.bola_attempt"}'}
+Invoke-WebRequest -Uri "http://127.0.0.1:3100/loki/api/v1/query" -Method GET -Body $body
+```
+
 Expected output includes:
 
 ```text
@@ -248,6 +255,13 @@ then query Loki:
 
 ```bash
 curl.exe -G -s "http://127.0.0.1:3100/loki/api/v1/query" --data-urlencode "query={event=\"security.bola_attempt\"}"
+```
+
+Powershell version:
+
+```powershell
+$body = @{query='{event="security.invalid_webhook_signature"}'}
+Invoke-WebRequest -Uri "http://127.0.0.1:3100/loki/api/v1/query" -Method GET -Body $body
 ```
 
 Expected output includes a `security.bola_attempt` log entry within roughly two
