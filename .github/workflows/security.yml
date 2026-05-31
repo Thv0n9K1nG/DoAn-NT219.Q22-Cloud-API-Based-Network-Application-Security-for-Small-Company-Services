@@ -1,0 +1,146 @@
+name: Security Checks
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  unit-tests:
+    name: Unit and integration-light tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install test dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements-dev.txt
+
+      - name: Run pytest
+        run: |
+          mkdir -p tests/reports
+          pytest -v --tb=short --junitxml=tests/reports/pytest-report.xml
+
+      - name: Upload pytest report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-report
+          path: tests/reports/pytest-report.xml
+          if-no-files-found: ignore
+
+  opa-tests:
+    name: OPA policy tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run OPA tests
+        run: bash scripts/test-opa.sh
+
+  sast:
+    name: SAST reports
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install SAST tools
+        run: python -m pip install --upgrade pip && python -m pip install "bandit[toml]>=1.7.9,<2.0" "semgrep>=1.100,<2.0"
+
+      - name: Run Bandit
+        run: |
+          mkdir -p tests/reports
+          bandit -c pyproject.toml -r services shared -f json -o tests/reports/bandit-report.json
+
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --config=p/python \
+            --config=p/jwt \
+            --config=p/secrets \
+            --metrics=off \
+            --error \
+            --json \
+            --output=tests/reports/semgrep-report.json \
+            services shared scripts opa
+
+      - name: Upload SAST reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sast-reports
+          path: |
+            tests/reports/bandit-report.json
+            tests/reports/semgrep-report.json
+          if-no-files-found: ignore
+
+  dependency-scan:
+    name: Dependency and filesystem scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependency scanner
+        run: python -m pip install --upgrade pip && python -m pip install "pip-audit>=2.8,<3.0"
+
+      - name: Run pip-audit for Python requirements
+        run: |
+          mkdir -p tests/reports
+          for req in requirements-dev.txt services/*/requirements.txt; do
+            report="tests/reports/pip-audit-$(echo "$req" | tr '/.' '--').json"
+            python -m pip_audit -r "$req" --format=json --output "$report"
+          done
+
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: tests/reports/trivy-results.sarif
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+
+      - name: Upload Trivy SARIF
+        if: always() && hashFiles('tests/reports/trivy-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: tests/reports/trivy-results.sarif
+
+      - name: Upload dependency reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-reports
+          path: |
+            tests/reports/pip-audit-*.json
+            tests/reports/trivy-results.sarif
+          if-no-files-found: ignore

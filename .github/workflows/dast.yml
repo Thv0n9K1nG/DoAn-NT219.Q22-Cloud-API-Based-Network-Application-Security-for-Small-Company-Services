@@ -1,0 +1,52 @@
+name: DAST API Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: OpenAPI document URL for the lab or staging target.
+        required: true
+        default: https://localhost:8443/openapi.json
+      fail_on_warn:
+        description: Fail when ZAP reports WARN findings.
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  zap-api-scan:
+    name: ZAP API scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run ZAP API scan
+        run: |
+          mkdir -p tests/reports
+          fail_flag="-I"
+          if [ "${{ inputs.fail_on_warn }}" = "true" ]; then
+            fail_flag=""
+          fi
+          docker run --rm \
+            -v "$PWD/tests/reports:/zap/wrk:rw" \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-api-scan.py \
+              -t "${{ inputs.target_url }}" \
+              -f openapi \
+              -J zap-report.json \
+              -r zap-report.html \
+              $fail_flag
+
+      - name: Upload ZAP reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-api-reports
+          path: |
+            tests/reports/zap-report.json
+            tests/reports/zap-report.html
+          if-no-files-found: ignore
