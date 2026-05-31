@@ -11,7 +11,7 @@ from typing import Any, Iterable
 from shared.pqc_signing import ML_DSA_ALGORITHM, MLDSASigner
 
 
-TOKEN_TYP = "JWT"
+TOKEN_TYP = "JWT"  # nosec B105
 
 
 class S2STokenError(ValueError):

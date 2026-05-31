@@ -12,7 +12,7 @@ from shared.request_context import get_request_id
 
 class ErrorCode:
     AUTH_REQUIRED = "AUTH_REQUIRED"
-    INVALID_TOKEN = "INVALID_TOKEN"
+    INVALID_TOKEN = "INVALID_TOKEN"  # nosec B105
     ACCESS_DENIED = "ACCESS_DENIED"
     BAD_REQUEST = "BAD_REQUEST"
     NOT_FOUND = "NOT_FOUND"

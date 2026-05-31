@@ -24,9 +24,10 @@ from shared.webhook_signer import create_webhook_signature_headers
 
 
 ALLOWED_CURRENCIES = {"usd", "vnd"}
-STRIPE_SECRET_KEY_PATH = "stripe/secret_key"
-STRIPE_WEBHOOK_SECRET_PATH = "stripe/webhook_secret"
-LAB_STRIPE_SECRET_PLACEHOLDER = "sk_test_lab_placeholder"
+# Vault KV paths and lab sentinels are identifiers, not secret material.
+STRIPE_SECRET_KEY_PATH = "stripe/secret_key"  # nosec B105
+STRIPE_WEBHOOK_SECRET_PATH = "stripe/webhook_secret"  # nosec B105
+LAB_STRIPE_SECRET_PLACEHOLDER = "sk_test_lab_placeholder"  # nosec B105
 LAB_STRIPE_WEBHOOK_PLACEHOLDER = "whsec_lab_placeholder"
 
 logger = logging.getLogger("payment-service")
