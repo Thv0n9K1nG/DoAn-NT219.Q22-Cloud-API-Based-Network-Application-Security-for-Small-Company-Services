@@ -119,7 +119,7 @@ http://host.docker.internal:18090/zap-openapi.json
 ```
 
 4. Passes `-O https://host.docker.internal:8443` so ZAP scans Kong, not the
-temporary static file server.
+   temporary static file server.
 5. Disables certificate validation for the lab self-signed TLS certificate.
 
 ### Command
