@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+import time
 from contextvars import ContextVar, Token
 from dataclasses import dataclass
 from uuid import uuid4
@@ -64,6 +66,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
         request_id = request.headers.get(self.settings.request_id_header) or str(uuid4())
+        started_at = time.perf_counter()
         tokens = set_request_context(
             request_id=request_id,
             tenant_id=request.headers.get(self.settings.tenant_id_header),
@@ -72,7 +75,30 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         try:
             response = await call_next(request)
             response.headers[self.settings.request_id_header] = request_id
+            latency_ms = round((time.perf_counter() - started_at) * 1000, 2)
+            logging.getLogger(self.settings.service_name).info(
+                "api.request",
+                extra={
+                    "event": "api.request",
+                    "method": request.method,
+                    "path": request.url.path,
+                    "status_code": response.status_code,
+                    "latency_ms": latency_ms,
+                },
+            )
             return response
+        except Exception:
+            latency_ms = round((time.perf_counter() - started_at) * 1000, 2)
+            logging.getLogger(self.settings.service_name).exception(
+                "api.request_failed",
+                extra={
+                    "event": "api.request_failed",
+                    "method": request.method,
+                    "path": request.url.path,
+                    "status_code": 500,
+                    "latency_ms": latency_ms,
+                },
+            )
+            raise
         finally:
             reset_request_context(tokens)
-

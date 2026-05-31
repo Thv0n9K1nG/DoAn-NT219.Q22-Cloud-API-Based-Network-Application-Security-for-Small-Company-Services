@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
@@ -38,7 +40,14 @@ def error_payload(code: str, message: str, request_id: str | None = None) -> dic
 
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(APIError)
-    async def api_error_handler(_: Request, exc: APIError) -> JSONResponse:
+    async def api_error_handler(request: Request, exc: APIError) -> JSONResponse:
+        settings = getattr(getattr(request.app, "state", None), "settings", None)
+        logger = logging.getLogger(getattr(settings, "service_name", "service"))
+        if exc.status_code == 401:
+            logger.warning(
+                "security.auth_failed",
+                extra={"event": "security.auth_failed", "path": request.url.path, "method": request.method, "status_code": 401},
+            )
         return JSONResponse(
             status_code=exc.status_code,
             content=error_payload(exc.code, exc.message),
