@@ -2,3 +2,10 @@
 pythonpath = ["."]
 testpaths = ["services", "tests"]
 addopts = ["--import-mode=importlib"]
+
+[tool.bandit]
+exclude_dirs = ["tests", ".context", "tests/reports"]
+skips = [
+  # Lab routes intentionally use self-signed HTTPS and local-only defaults.
+  "B104",
+]
