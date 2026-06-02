@@ -432,6 +432,26 @@ Expected output includes `58 passed`, `PASS: 14/14`,
 `No known vulnerabilities found`, `0 findings`, and all four service images
 built successfully.
 
+Run Stage 16 security attack simulations:
+
+```bash
+python -m pytest tests/attacks -v --tb=short
+bash tests/run_security_tests.sh
+```
+
+Expected output includes:
+
+```text
+18 passed
+PASS: 14/14
+58 passed
+FAIL-NEW: 0
+WARN-NEW: 2
+```
+
+See `docs/stage-16-security-testing.md` for the attack matrix, observed ZAP
+warnings, current limits, and next hardening tasks.
+
 Expected full-stack workflow for later stages:
 
 ```bash
@@ -442,10 +462,9 @@ Use `docker-compose.dev.yml` for service hot reload overrides in later stages.
 
 ## Current Stage
 
-Completed: Stage 15 - GitHub Actions security checks, Docker build matrix,
-Dependabot, and manual ZAP DAST workflow.
+Completed: Stage 16 - Security testing and attack simulation.
 
-Next: Stage 16 - Security testing and attack simulation.
+Next: Stage 17 - Evaluation metrics, runbooks, final docs, and demo package.
 
 ## Safety Notes
 
