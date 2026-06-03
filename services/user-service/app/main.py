@@ -16,7 +16,7 @@ configure_service_logging()
 app = FastAPI(
     title="User Service API",
     version="0.1.0",
-    description="User profile and tenant membership API skeleton.",
+    description="User profile and tenant membership API.",
 )
 app.state.settings = settings
 app.add_middleware(RequestContextMiddleware, settings=settings)
@@ -37,4 +37,3 @@ async def ready():
         status_code=503,
         content={"status": "not_ready", "service": settings.service_name, "database": "unavailable"},
     )
-

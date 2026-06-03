@@ -42,6 +42,15 @@ plugins:
         - X-RateLimit-Remaining-Minute
       credentials: true
       max_age: 3600
+  - name: response-transformer
+    config:
+      add:
+        headers:
+          - "Cache-Control:no-store"
+          - "Pragma:no-cache"
+          - "X-Content-Type-Options:nosniff"
+          - "X-Frame-Options:DENY"
+          - "Referrer-Policy:no-referrer"
 
 services:
   - name: user-service

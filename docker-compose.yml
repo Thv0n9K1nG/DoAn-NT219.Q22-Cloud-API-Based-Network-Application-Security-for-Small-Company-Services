@@ -76,7 +76,7 @@ services:
       KC_HOSTNAME_STRICT: "false"
       KC_HEALTH_ENABLED: "true"
     ports:
-      - "${KEYCLOAK_HOST_PORT:-18080}:8080"
+      - "127.0.0.1:${KEYCLOAK_HOST_PORT:-18080}:8080"
     volumes:
       - ./idp/realm-export.json:/opt/keycloak/data/import/saas-platform-realm.json:ro
     networks:
@@ -237,7 +237,7 @@ services:
       - /policies/policies
       - /policies/data
     ports:
-      - "${OPA_HOST_PORT:-8181}:8181"
+      - "127.0.0.1:${OPA_HOST_PORT:-8181}:8181"
     volumes:
       - ./opa:/policies:ro
     networks:

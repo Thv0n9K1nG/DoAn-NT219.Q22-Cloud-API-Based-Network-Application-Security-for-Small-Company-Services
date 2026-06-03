@@ -1,0 +1,17 @@
+{
+  admin off
+}
+
+{$PUBLIC_DOMAIN} {
+  encode gzip zstd
+
+  reverse_proxy kong:8000
+
+  header {
+    Cache-Control "no-store"
+    Pragma "no-cache"
+    X-Content-Type-Options "nosniff"
+    X-Frame-Options "DENY"
+    Referrer-Policy "no-referrer"
+  }
+}

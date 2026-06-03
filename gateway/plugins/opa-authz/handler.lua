@@ -115,12 +115,17 @@ function OpaAuthzHandler:access(conf)
   local roles = roles_from_claims(claims)
 
   -- Downstream services still verify JWTs; these headers are operational hints for logs and rate limits.
+  -- ngx.req.set_header updates the in-flight request so later access-phase plugins, such as
+  -- Kong's rate-limiting plugin, use tenant identity derived from the verified token.
   if tenant_id ~= "" then
+    ngx.req.set_header("X-Tenant-ID", tenant_id)
     kong.service.request.set_header("X-Tenant-ID", tenant_id)
   end
   if user_id ~= "" then
+    ngx.req.set_header("X-User-ID", user_id)
     kong.service.request.set_header("X-User-ID", user_id)
   end
+  ngx.req.set_header("X-Roles", table.concat(roles, ","))
   kong.service.request.set_header("X-Roles", table.concat(roles, ","))
 
   local opa_input = {

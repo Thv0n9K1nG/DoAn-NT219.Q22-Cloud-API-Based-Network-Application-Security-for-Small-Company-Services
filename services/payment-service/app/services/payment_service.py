@@ -103,11 +103,15 @@ class PaymentService:
         await self.db.refresh(payment)
         return PaymentIntentResult(payment=payment, client_secret=_stripe_value(stripe_intent, "client_secret"))
 
-    async def list_payments(self, *, tenant_id: UUID) -> list[Payment]:
-        await set_tenant_context(self.db, str(tenant_id))
-        result = await self.db.execute(
-            select(Payment).where(Payment.tenant_id == tenant_id).order_by(Payment.created_at.desc())
-        )
+    async def list_payments(self, *, tenant_id: UUID | None, include_all: bool = False) -> list[Payment]:
+        if tenant_id is not None:
+            await set_tenant_context(self.db, str(tenant_id))
+
+        query = select(Payment).order_by(Payment.created_at.desc())
+        if tenant_id is not None and not include_all:
+            query = query.where(Payment.tenant_id == tenant_id)
+
+        result = await self.db.execute(query)
         return list(result.scalars().all())
 
     async def get_payment(self, payment_id: UUID) -> Payment | None:

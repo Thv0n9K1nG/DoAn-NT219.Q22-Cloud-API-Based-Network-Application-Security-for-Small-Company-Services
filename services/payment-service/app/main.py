@@ -17,7 +17,7 @@ configure_service_logging()
 app = FastAPI(
     title="Payment Service API",
     version="0.1.0",
-    description="Stripe sandbox payment and webhook API skeleton.",
+    description="Stripe sandbox payment and webhook API.",
 )
 app.state.settings = settings
 app.add_middleware(RequestContextMiddleware, settings=settings)

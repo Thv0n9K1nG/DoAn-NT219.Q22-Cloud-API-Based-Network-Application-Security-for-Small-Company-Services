@@ -1,6 +1,5 @@
-"""Stage 7 business placeholder for later resource CRUD and BOLA checks."""
+"""Resource Service metadata helpers."""
 
 
 def service_summary() -> dict:
-    return {"service": "resource-service", "stage": "stage-7", "status": "skeleton"}
-
+    return {"service": "resource-service", "stage": "stage-16", "status": "tenant-isolated-resource-api"}

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 
 from app.api.v1.dependencies import get_payment_service
 from app.db.models import Payment
@@ -61,11 +61,17 @@ async def create_payment_intent(
 
 @router.get("/payments", response_model=list[PaymentResponse], tags=["payments"])
 async def list_payments(
+    tenant_id: UUID | None = Query(default=None),
     current_user: CurrentUser = Depends(require_roles("tenant_admin", "platform_admin")),
     payment_service: PaymentService = Depends(get_payment_service),
 ) -> list[Payment]:
-    tenant_id = _required_tenant_id(current_user)
-    return await payment_service.list_payments(tenant_id=tenant_id)
+    if "platform_admin" in current_user.roles:
+        return await payment_service.list_payments(
+            tenant_id=tenant_id,
+            include_all=tenant_id is None,
+        )
+
+    return await payment_service.list_payments(tenant_id=_required_tenant_id(current_user))
 
 
 @router.get("/payments/{payment_id}", response_model=PaymentResponse, tags=["payments"])

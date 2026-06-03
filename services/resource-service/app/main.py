@@ -16,7 +16,7 @@ configure_service_logging()
 app = FastAPI(
     title="Resource Service API",
     version="0.1.0",
-    description="Tenant-owned resource API skeleton.",
+    description="Tenant-owned resource API with service-level BOLA protection.",
 )
 app.state.settings = settings
 app.add_middleware(RequestContextMiddleware, settings=settings)
@@ -37,4 +37,3 @@ async def ready():
         status_code=503,
         content={"status": "not_ready", "service": settings.service_name, "database": "unavailable"},
     )
-

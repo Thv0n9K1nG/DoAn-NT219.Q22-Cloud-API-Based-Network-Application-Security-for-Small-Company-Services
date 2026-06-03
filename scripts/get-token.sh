@@ -5,9 +5,10 @@ USERNAME="${1:-alpha-user@example.com}"
 PASSWORD="${2:-TestPass123!}"
 CLIENT_ID="${3:-saas-spa}"
 KEYCLOAK_URL="${KEYCLOAK_URL:-http://localhost:${KEYCLOAK_HOST_PORT:-18080}}"
+REALM="${KEYCLOAK_REALM:-saas-platform}"
 
 # Password grant is enabled only for local lab automation; production clients use Authorization Code + PKCE.
-response="$(curl -fsS -X POST "$KEYCLOAK_URL/realms/saas-platform/protocol/openid-connect/token" \
+response="$(curl -fsS -X POST "$KEYCLOAK_URL/realms/$REALM/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=password" \
   -d "client_id=$CLIENT_ID" \

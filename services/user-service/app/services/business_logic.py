@@ -1,6 +1,5 @@
-"""Stage 7 business placeholder for later CRUD implementation."""
+"""User Service metadata helpers."""
 
 
 def service_summary() -> dict:
-    return {"service": "user-service", "stage": "stage-7", "status": "skeleton"}
-
+    return {"service": "user-service", "stage": "stage-8", "status": "tenant-aware-user-api"}

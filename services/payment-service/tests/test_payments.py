@@ -34,7 +34,7 @@ def load_app_and_modules():
 def current_user(*, roles: tuple[str, ...], tenant_id: UUID = ALPHA_TENANT, user_id: str = "kc-alpha-user") -> CurrentUser:
     return CurrentUser(
         user_id=user_id,
-        tenant_id=str(tenant_id),
+        tenant_id=str(tenant_id) if tenant_id is not None else "",
         email="user@example.com",
         roles=roles,
         jti="test-jti",
@@ -106,8 +106,9 @@ def test_create_payment_intent_rejects_unsupported_currency():
 
 def test_tenant_admin_lists_only_own_tenant_payments():
     class FakePaymentService:
-        async def list_payments(self, *, tenant_id):
+        async def list_payments(self, *, tenant_id, include_all=False):
             assert tenant_id == ALPHA_TENANT
+            assert include_all is False
             return [payment(tenant_id=tenant_id, status="succeeded")]
 
     client = client_with_service(current_user(roles=("tenant_admin",)), FakePaymentService())
@@ -117,6 +118,36 @@ def test_tenant_admin_lists_only_own_tenant_payments():
     assert response.status_code == 200
     assert {item["tenant_id"] for item in response.json()} == {str(ALPHA_TENANT)}
     assert response.json()[0]["status"] == "succeeded"
+
+
+def test_platform_admin_can_list_all_payments_without_tenant_context():
+    class FakePaymentService:
+        async def list_payments(self, *, tenant_id, include_all=False):
+            assert tenant_id is None
+            assert include_all is True
+            return [payment(tenant_id=ALPHA_TENANT), payment(tenant_id=BETA_TENANT, status="succeeded")]
+
+    client = client_with_service(current_user(roles=("platform_admin",), tenant_id=None, user_id="kc-platform-admin"), FakePaymentService())
+
+    response = client.get("/api/v1/payments")
+
+    assert response.status_code == 200
+    assert {item["tenant_id"] for item in response.json()} == {str(ALPHA_TENANT), str(BETA_TENANT)}
+
+
+def test_platform_admin_can_filter_payments_by_tenant():
+    class FakePaymentService:
+        async def list_payments(self, *, tenant_id, include_all=False):
+            assert tenant_id == BETA_TENANT
+            assert include_all is False
+            return [payment(tenant_id=BETA_TENANT, status="succeeded")]
+
+    client = client_with_service(current_user(roles=("platform_admin",), tenant_id=None, user_id="kc-platform-admin"), FakePaymentService())
+
+    response = client.get(f"/api/v1/payments?tenant_id={BETA_TENANT}")
+
+    assert response.status_code == 200
+    assert {item["tenant_id"] for item in response.json()} == {str(BETA_TENANT)}
 
 
 def test_cross_tenant_payment_read_is_denied_and_logged(capsys):

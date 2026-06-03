@@ -1,0 +1,17 @@
+{
+  "id": "evt_demo_payment_succeeded",
+  "object": "event",
+  "type": "payment_intent.succeeded",
+  "data": {
+    "object": {
+      "id": "pi_demo_payment_succeeded",
+      "object": "payment_intent",
+      "amount": 2000,
+      "currency": "usd",
+      "metadata": {
+        "tenant_id": "11111111-1111-1111-1111-111111111111",
+        "user_id": "kc-alpha-user"
+      }
+    }
+  }
+}
