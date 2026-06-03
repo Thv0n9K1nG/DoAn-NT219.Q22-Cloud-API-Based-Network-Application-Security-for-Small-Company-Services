@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.core.logging import configure_service_logging
 from app.db.database import check_database_ready
 from shared.errors import register_error_handlers
+from shared.internal_mldsa_mtls import InternalMLDSAMTLSMiddleware
 from shared.request_context import RequestContextMiddleware
 
 
@@ -21,6 +22,7 @@ app = FastAPI(
 )
 app.state.settings = settings
 app.add_middleware(RequestContextMiddleware, settings=settings)
+app.add_middleware(InternalMLDSAMTLSMiddleware, settings=settings)
 register_error_handlers(app)
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(webhook_router)

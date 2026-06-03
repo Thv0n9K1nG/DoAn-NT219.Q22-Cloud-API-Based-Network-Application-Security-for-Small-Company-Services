@@ -14,6 +14,13 @@ ca_certificates:
     cert: |
 __KONG_INTERNAL_CA_CERT__
 
+certificates:
+  - id: 00000000-0000-4000-8000-000000000012
+    cert: |
+__KONG_UPSTREAM_CLIENT_CERT__
+    key: |
+__KONG_UPSTREAM_CLIENT_KEY__
+
 plugins:
   - name: correlation-id
     config:
@@ -51,10 +58,20 @@ plugins:
           - "X-Content-Type-Options:nosniff"
           - "X-Frame-Options:DENY"
           - "Referrer-Policy:no-referrer"
+  - name: request-transformer
+    config:
+      remove:
+        headers:
+          - X-Internal-MLDSA-Token
+      add:
+        headers:
+          - "X-Internal-MLDSA-Token:__KONG_INTERNAL_MLDSA_TOKEN__"
 
 services:
   - name: user-service
     url: https://user-service:8000
+    client_certificate:
+      id: 00000000-0000-4000-8000-000000000012
     tls_verify: true
     tls_verify_depth: 2
     ca_certificates:
@@ -83,6 +100,8 @@ services:
 
   - name: resource-service
     url: https://resource-service:8000
+    client_certificate:
+      id: 00000000-0000-4000-8000-000000000012
     tls_verify: true
     tls_verify_depth: 2
     ca_certificates:
@@ -122,6 +141,8 @@ services:
 
   - name: admin-service
     url: https://admin-service:8000
+    client_certificate:
+      id: 00000000-0000-4000-8000-000000000012
     tls_verify: true
     tls_verify_depth: 2
     ca_certificates:
@@ -157,6 +178,8 @@ services:
 
   - name: payment-service
     url: https://payment-service:8000
+    client_certificate:
+      id: 00000000-0000-4000-8000-000000000012
     tls_verify: true
     tls_verify_depth: 2
     ca_certificates:

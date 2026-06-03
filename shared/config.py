@@ -29,6 +29,17 @@ class Settings(BaseSettings):
     tenant_id_header: str = Field(default="X-Tenant-ID", alias="TENANT_ID_HEADER")
     user_id_header: str = Field(default="X-User-ID", alias="USER_ID_HEADER")
     jwks_cache_ttl_seconds: int = Field(default=300, alias="JWKS_CACHE_TTL_SECONDS")
+    internal_mldsa_mtls_required: bool = Field(default=False, alias="INTERNAL_MLDSA_MTLS_REQUIRED")
+    internal_mldsa_token_header: str = Field(default="X-Internal-MLDSA-Token", alias="INTERNAL_MLDSA_TOKEN_HEADER")
+    internal_mldsa_public_key_file: str = Field(
+        default="/certs/mldsa-upstream-client.pub",
+        alias="INTERNAL_MLDSA_PUBLIC_KEY_FILE",
+    )
+    internal_mldsa_expected_audience: str = Field(
+        default="internal-upstream",
+        alias="INTERNAL_MLDSA_EXPECTED_AUDIENCE",
+    )
+    internal_mldsa_allowed_issuer: str = Field(default="kong-gateway", alias="INTERNAL_MLDSA_ALLOWED_ISSUER")
 
     @model_validator(mode="after")
     def derive_issuer(self) -> "Settings":

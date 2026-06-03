@@ -1,12 +1,47 @@
 #!/bin/bash
 set -euo pipefail
 
-if [[ -f .env ]]; then
-  set -a
-  # shellcheck disable=SC1091
-  source .env
-  set +a
-fi
+load_env_defaults() {
+  local line key value
+  [[ -f .env ]] || return 0
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
+    [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ "$line" == *"="* ]] || continue
+    key="${line%%=*}"
+    value="${line#*=}"
+    [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+    if [[ -z "${!key+x}" ]]; then
+      export "$key=$value"
+    fi
+  done < .env
+}
+
+load_env_defaults
+
+PYTHON_BIN="${PYTHON_BIN:-}"
+detect_python() {
+  if [[ -n "$PYTHON_BIN" ]]; then
+    return 0
+  fi
+
+  local candidate
+  for candidate in python.exe py.exe python3 python py; do
+    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c "import pqcrypto" >/dev/null 2>&1; then
+      PYTHON_BIN="$candidate"
+      return 0
+    fi
+  done
+  for candidate in python.exe py.exe python3 python py; do
+    if command -v "$candidate" >/dev/null 2>&1; then
+      PYTHON_BIN="$candidate"
+      return 0
+    fi
+  done
+
+  echo "Python is required to run the demo script" >&2
+  return 1
+}
 
 BASE_URL="${1:-${PUBLIC_BASE_URL:-}}"
 if [[ -z "$BASE_URL" ]]; then
@@ -20,32 +55,32 @@ BASE_URL="${BASE_URL%/}"
 PASSWORD="${KEYCLOAK_LAB_USER_PASSWORD:-TestPass123!}"
 REDIS_PASSWORD="${REDIS_PASSWORD:-changeme-redis}"
 
+detect_python
+
 section() {
   printf "\n==== %s ====\n" "$1"
 }
 
 http_status() {
-  curl -k -s -o /dev/null -w "%{http_code}" "$@"
+  local status
+  status="$(curl -k -s -o /dev/null -w "%{http_code}" "$@" || true)"
+  printf "%s" "${status:-000}"
 }
 
 json_value() {
   local expression="$1"
-  python - "$expression" <<'PY'
-import json
-import sys
-
+  "$PYTHON_BIN" -c 'import json, sys
 expression = sys.argv[1]
 data = json.load(sys.stdin)
 value = data
 for part in expression.split("."):
     value = value[part]
-print(value)
-PY
+print(value)' "$expression"
 }
 
 section "Acquire lab tokens"
-ALPHA_TOKEN="$(bash scripts/get-token.sh alpha-user@example.com "$PASSWORD")"
-BETA_TOKEN="$(bash scripts/get-token.sh beta-user@example.com "$PASSWORD")"
+ALPHA_TOKEN="$(bash scripts/get-token.sh alpha-user@example.com "$PASSWORD" | tr -d '\r\n')"
+BETA_TOKEN="$(bash scripts/get-token.sh beta-user@example.com "$PASSWORD" | tr -d '\r\n')"
 echo "alpha token length: ${#ALPHA_TOKEN}"
 echo "beta token length: ${#BETA_TOKEN}"
 
@@ -54,10 +89,10 @@ status="$(http_status "$BASE_URL/api/v1/resources")"
 echo "GET /api/v1/resources without token -> $status"
 
 section "Alpha lists resources"
-curl -k -s "$BASE_URL/api/v1/resources" -H "Authorization: Bearer $ALPHA_TOKEN" | python -m json.tool
+curl -k -s "$BASE_URL/api/v1/resources" -H "Authorization: Bearer $ALPHA_TOKEN" | "$PYTHON_BIN" -m json.tool
 
 section "Alpha creates a resource"
-RESOURCE_BODY="$(python - <<'PY'
+RESOURCE_BODY="$("$PYTHON_BIN" - <<'PY'
 import json
 import uuid
 print(json.dumps({
@@ -72,8 +107,8 @@ CREATE_RESPONSE="$(curl -k -s -X POST "$BASE_URL/api/v1/resources" \
   -H "Authorization: Bearer $ALPHA_TOKEN" \
   -H "Content-Type: application/json" \
   --data-binary "$RESOURCE_BODY")"
-printf "%s\n" "$CREATE_RESPONSE" | python -m json.tool
-RESOURCE_ID="$(printf "%s\n" "$CREATE_RESPONSE" | json_value id)"
+printf "%s\n" "$CREATE_RESPONSE" | "$PYTHON_BIN" -m json.tool
+RESOURCE_ID="$(printf "%s\n" "$CREATE_RESPONSE" | json_value id | tr -d '\r\n')"
 echo "created resource_id=$RESOURCE_ID"
 
 section "Beta attempts cross-tenant BOLA read"
@@ -103,7 +138,7 @@ WEBHOOK_STATUS="$(http_status -X POST "$BASE_URL/webhooks/stripe" \
 echo "forged webhook -> $WEBHOOK_STATUS"
 
 section "ML-DSA sign/verify and tamper check"
-python - <<'PY'
+"$PYTHON_BIN" - <<'PY'
 from shared.pqc_signing import MLDSAKeyPair, MLDSASigner
 from shared.s2s_token import S2STokenError, create_s2s_token, verify_s2s_token
 

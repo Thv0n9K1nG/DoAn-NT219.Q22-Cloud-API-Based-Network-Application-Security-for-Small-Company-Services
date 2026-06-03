@@ -101,7 +101,9 @@ services:
       JWT_ISSUER: http://localhost:${KEYCLOAK_HOST_PORT:-18080}/realms/${KEYCLOAK_REALM:-saas-platform}
       VAULT_ADDR: http://vault:8200
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-certfile", "/certs/service.crt", "--ssl-keyfile", "/certs/service.key"]
+      INTERNAL_MLDSA_MTLS_REQUIRED: "true"
+      INTERNAL_MLDSA_PUBLIC_KEY_FILE: /certs/mldsa-upstream-client.pub
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-certfile", "/certs/service.crt", "--ssl-keyfile", "/certs/service.key", "--ssl-ca-certs", "/certs/ca.crt", "--ssl-cert-reqs", "2"]
     volumes:
       - ./services/user-service/certs:/certs:ro
     networks:
@@ -115,7 +117,7 @@ services:
       vault:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import ssl, urllib.request; urllib.request.urlopen('https://127.0.0.1:8000/health/live', timeout=3, context=ssl._create_unverified_context())\""]
+      test: ["CMD-SHELL", "python -c \"import ssl, urllib.request; ctx=ssl.create_default_context(cafile='/certs/ca.crt'); ctx.check_hostname=False; ctx.load_cert_chain('/certs/health-client.crt','/certs/health-client.key'); urllib.request.urlopen('https://127.0.0.1:8000/health/live', timeout=3, context=ctx)\""]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -135,7 +137,9 @@ services:
       JWT_ISSUER: http://localhost:${KEYCLOAK_HOST_PORT:-18080}/realms/${KEYCLOAK_REALM:-saas-platform}
       VAULT_ADDR: http://vault:8200
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-certfile", "/certs/service.crt", "--ssl-keyfile", "/certs/service.key"]
+      INTERNAL_MLDSA_MTLS_REQUIRED: "true"
+      INTERNAL_MLDSA_PUBLIC_KEY_FILE: /certs/mldsa-upstream-client.pub
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-certfile", "/certs/service.crt", "--ssl-keyfile", "/certs/service.key", "--ssl-ca-certs", "/certs/ca.crt", "--ssl-cert-reqs", "2"]
     volumes:
       - ./services/resource-service/certs:/certs:ro
     networks:
@@ -149,7 +153,7 @@ services:
       vault:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import ssl, urllib.request; urllib.request.urlopen('https://127.0.0.1:8000/health/live', timeout=3, context=ssl._create_unverified_context())\""]
+      test: ["CMD-SHELL", "python -c \"import ssl, urllib.request; ctx=ssl.create_default_context(cafile='/certs/ca.crt'); ctx.check_hostname=False; ctx.load_cert_chain('/certs/health-client.crt','/certs/health-client.key'); urllib.request.urlopen('https://127.0.0.1:8000/health/live', timeout=3, context=ctx)\""]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -169,7 +173,9 @@ services:
       JWT_ISSUER: http://localhost:${KEYCLOAK_HOST_PORT:-18080}/realms/${KEYCLOAK_REALM:-saas-platform}
       VAULT_ADDR: http://vault:8200
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-certfile", "/certs/service.crt", "--ssl-keyfile", "/certs/service.key"]
+      INTERNAL_MLDSA_MTLS_REQUIRED: "true"
+      INTERNAL_MLDSA_PUBLIC_KEY_FILE: /certs/mldsa-upstream-client.pub
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-certfile", "/certs/service.crt", "--ssl-keyfile", "/certs/service.key", "--ssl-ca-certs", "/certs/ca.crt", "--ssl-cert-reqs", "2"]
     volumes:
       - ./services/admin-service/certs:/certs:ro
     networks:
@@ -183,7 +189,7 @@ services:
       vault:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import ssl, urllib.request; urllib.request.urlopen('https://127.0.0.1:8000/health/live', timeout=3, context=ssl._create_unverified_context())\""]
+      test: ["CMD-SHELL", "python -c \"import ssl, urllib.request; ctx=ssl.create_default_context(cafile='/certs/ca.crt'); ctx.check_hostname=False; ctx.load_cert_chain('/certs/health-client.crt','/certs/health-client.key'); urllib.request.urlopen('https://127.0.0.1:8000/health/live', timeout=3, context=ctx)\""]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -205,7 +211,9 @@ services:
       VAULT_ROLE_ID: ${PAYMENT_SVC_VAULT_ROLE_ID:-}
       VAULT_SECRET_ID: ${PAYMENT_SVC_VAULT_SECRET_ID:-}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-certfile", "/certs/service.crt", "--ssl-keyfile", "/certs/service.key"]
+      INTERNAL_MLDSA_MTLS_REQUIRED: "true"
+      INTERNAL_MLDSA_PUBLIC_KEY_FILE: /certs/mldsa-upstream-client.pub
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-certfile", "/certs/service.crt", "--ssl-keyfile", "/certs/service.key", "--ssl-ca-certs", "/certs/ca.crt", "--ssl-cert-reqs", "2"]
     volumes:
       - ./services/payment-service/certs:/certs:ro
     networks:
@@ -219,7 +227,7 @@ services:
       vault:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import ssl, urllib.request; urllib.request.urlopen('https://127.0.0.1:8000/health/live', timeout=3, context=ssl._create_unverified_context())\""]
+      test: ["CMD-SHELL", "python -c \"import ssl, urllib.request; ctx=ssl.create_default_context(cafile='/certs/ca.crt'); ctx.check_hostname=False; ctx.load_cert_chain('/certs/health-client.crt','/certs/health-client.key'); urllib.request.urlopen('https://127.0.0.1:8000/health/live', timeout=3, context=ctx)\""]
       interval: 10s
       timeout: 5s
       retries: 10

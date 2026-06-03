@@ -1,12 +1,23 @@
 #!/bin/bash
 set -euo pipefail
 
-if [[ -f .env ]]; then
-  set -a
-  # shellcheck disable=SC1091
-  source .env
-  set +a
-fi
+load_env_defaults() {
+  local line key value
+  [[ -f .env ]] || return 0
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
+    [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ "$line" == *"="* ]] || continue
+    key="${line%%=*}"
+    value="${line#*=}"
+    [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+    if [[ -z "${!key+x}" ]]; then
+      export "$key=$value"
+    fi
+  done < .env
+}
+
+load_env_defaults
 
 BASE_URL="${PUBLIC_BASE_URL:-${1:-}}"
 if [[ -z "$BASE_URL" ]]; then
@@ -17,9 +28,12 @@ if [[ -z "$BASE_URL" ]]; then
   fi
 fi
 BASE_URL="${BASE_URL%/}"
+REDIS_PASSWORD="${REDIS_PASSWORD:-changeme-redis}"
 
 http_status() {
-  curl -k -s -o /dev/null -w "%{http_code}" "$@"
+  local status
+  status="$(curl -k -s -o /dev/null -w "%{http_code}" "$@" || true)"
+  printf "%s" "${status:-000}"
 }
 
 assert_status() {
@@ -36,6 +50,8 @@ assert_status() {
 }
 
 echo "Smoke testing $BASE_URL"
+
+docker compose exec -T redis redis-cli -a "$REDIS_PASSWORD" FLUSHDB >/dev/null 2>&1 || true
 
 ALPHA_TOKEN="$(bash scripts/get-token.sh alpha-user@example.com "${KEYCLOAK_LAB_USER_PASSWORD:-TestPass123!}")"
 

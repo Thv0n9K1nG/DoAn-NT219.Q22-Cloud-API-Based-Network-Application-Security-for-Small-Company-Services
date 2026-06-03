@@ -44,6 +44,14 @@ render_kong_config() {
     echo "gateway/certs/internal-ca.crt is missing; generating lab certificates first..."
     bash scripts/generate-dev-certs.sh >/dev/null
   fi
+  if [[ ! -f gateway/certs/kong-upstream-client.crt || ! -f gateway/certs/kong-upstream-client.key ]]; then
+    echo "Kong upstream client certificate is missing; generating lab certificates first..."
+    bash scripts/generate-dev-certs.sh >/dev/null
+  fi
+  if [[ ! -f gateway/certs/mldsa-upstream-client.token || ! -f gateway/certs/mldsa-upstream-client.pub ]]; then
+    echo "Kong ML-DSA upstream client assertion is missing; generating lab certificates first..."
+    bash scripts/generate-dev-certs.sh >/dev/null
+  fi
 
   "$PYTHON_BIN" - "$TEMPLATE" "$OUTPUT" "$KEYCLOAK_URL" "$REALM" "$KONG_JWT_ISSUER" "$REDIS_PASSWORD" <<'PY'
 import json
@@ -64,12 +72,24 @@ indented_pem = "\n".join(f"          {line}" for line in pem_lines)
 with open("gateway/certs/internal-ca.crt", "r", encoding="utf-8") as file:
     internal_ca = "\n".join(f"      {line}" for line in file.read().splitlines())
 
+with open("gateway/certs/kong-upstream-client.crt", "r", encoding="utf-8") as file:
+    upstream_client_cert = "\n".join(f"      {line}" for line in file.read().splitlines())
+
+with open("gateway/certs/kong-upstream-client.key", "r", encoding="utf-8") as file:
+    upstream_client_key = "\n".join(f"      {line}" for line in file.read().splitlines())
+
+with open("gateway/certs/mldsa-upstream-client.token", "r", encoding="ascii") as file:
+    upstream_mldsa_token = file.read().strip()
+
 with open(template_path, "r", encoding="utf-8") as file:
     rendered = file.read()
 
 rendered = rendered.replace("__KONG_JWT_ISSUER__", issuer)
 rendered = rendered.replace("__KONG_JWT_PUBLIC_KEY__", indented_pem)
 rendered = rendered.replace("__KONG_INTERNAL_CA_CERT__", internal_ca)
+rendered = rendered.replace("__KONG_UPSTREAM_CLIENT_CERT__", upstream_client_cert)
+rendered = rendered.replace("__KONG_UPSTREAM_CLIENT_KEY__", upstream_client_key)
+rendered = rendered.replace("__KONG_INTERNAL_MLDSA_TOKEN__", upstream_mldsa_token)
 rendered = rendered.replace("__REDIS_PASSWORD__", redis_password)
 
 with open(output_path, "w", encoding="utf-8", newline="\n") as file:
