@@ -53,7 +53,7 @@ jobs:
           echo "tag=ghcr.io/${owner}/nt219-${SERVICE_NAME}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Build service image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ${{ matrix.dockerfile }}
